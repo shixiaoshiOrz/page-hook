@@ -1,0 +1,17 @@
+// ==UserScript==
+// @name         标准产品辅助工具
+// @namespace    http://tampermonkey.net/
+// @version      0.1
+// @description  try to take over the world!
+// @author       gcshi
+// @match        http://*/*
+// @match        https://*/*
+// @grant        unsafewindow
+// @grant        GM_getValue
+// @grant        GM_setValue
+// @grant        GM_xmlhttpRequest
+// @grant        GM_listValues
+// @grant        GM_setClipboard
+// @noframes
+// @connect      *
+// ==/UserScript==
