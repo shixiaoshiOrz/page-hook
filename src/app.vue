@@ -12,6 +12,11 @@
             <drawerWrap @deletedUrl='deletedUrl' @menuId='menuId'></drawerWrap>
         </el-drawer>
 
+        <div class="youhou_debug-tool-wrap" @click="debugToolDrawerVisible()" v-if="debugToolVisible" v-drag>
+            <el-button type="warning">接口信息</el-button>
+        </div>
+        <debugDrawer @debugToolDrawer='debugToolDrawer = false' :ajaxHookArray='ajaxHookArray' v-if="debugToolDrawer"></debugDrawer>
+
     </div>
 
 </template>
@@ -19,34 +24,92 @@
 <script>
 import Vue from 'vue';
 import { GM_setObject,GM_getObject ,GM_ajax} from './utils/GM_tools'
-import { ajaxHook } from './utils/ajaxHook.js'
+import { ajaxHook ,unProxy} from './utils/ajaxHook.js'
 import switchWrap from "./components/toolbtn/switch.vue"
 import addtoolWrap from './components/toolbtn/toolBtnWrap.vue'
 import drawerWrap from './components/standardInfo/drawerWrap.vue'
+import debugDrawer from './components/debugTool/debugDrawer.vue'
+
 export default {
     data(){
         return {
             drawer: false,
             deletedFulUrl:"",
             ajaxHookArray:[],//ajaxHook暂存信息
-            size:50
+            size:50,
+
+            debugToolVisible:true,
+            debugToolDrawer:false,
+            stopDebugTool:false,
+            locationHref:null,
+
         }
     },
-    components:{ drawerWrap},
-    created(){
-        ajaxHook(this)
+    components:{ drawerWrap ,debugDrawer},
+    beforeDestroy(){
+        window.removeEventListener('load',this.load)
+        window.removeEventListener('popstate',this.popstate)
     },
     mounted(){
-        this.addtoolWrap()
-        this.switchUrl()
         //初始化界面大小
          const menuList = GM_getObject('MENULIST') || null
          if(menuList && menuList[0].id) {
            let id = menuList[0].id
            this.menuId(id)
-         }       
+         } 
+        //拦截框架的所有接口
+        ajaxHook(this)
+        window.addEventListener('load',this.load),
+        window.addEventListener('popstate',this.popstate)
+
     },
    methods:{
+        //获取子应用所有信息
+    async queryALLInfo(type){
+        
+          
+        let standardUrlList = GM_getObject('LOGININFOARRAY') || []
+        if(standardUrlList.length == 0) return false
+        var itemInfo = standardUrlList.find(res => res.fullUrl.indexOf(location.host) > 1)
+        if(!itemInfo) return false
+        let loginName = itemInfo.userName
+      
+        const parmas = {loginName: loginName,loginDevice: "PC",isAdminLogin:isAdminLogin}
+        let data = await GM_ajax({
+            url:'/api/meos/EMS_SaaS_Web/Spring/MVC/entrance/unifier/getPersonByUserNameService',
+            data:JSON.stringify(parmas)
+        })
+        if(!data) return false
+        let result = JSON.parse(data)
+        if(result.content[0].resultType == 1) return result
+    },
+    popstate(){
+        if(this.locationHref.indexOf('/login') > -1 ) return this.locationHref = location.href
+        this.stopDebugTool = true
+        GM_setObject('SHOWDEBUGTOOL',true)
+        this.locationHref = location.href
+    },
+    load(){
+        this.locationHref = location.href
+        this.addtoolWrap()
+        this.switchUrl()
+        
+        let iframe = document.querySelector('iframe')
+        if(iframe){
+            ajaxHook(this,iframe.contentWindow)
+        }
+        if(GM_getObject('SHOWDEBUGTOOL')){
+            this.debugToolDrawer = true
+        }
+        GM_setObject('SHOWDEBUGTOOL',null)
+    },
+    debugToolDrawerVisible(){
+        if(!this.stopDebugTool){
+            this.debugToolDrawer = true
+        }else{
+            location.reload()
+        }
+    },
     domMount(dom,className,componet,propsData){
         if(!dom) return
         const div = document.createElement('div')
@@ -87,7 +150,7 @@ export default {
 }
 </script>
 
-<style >
+<style lang='less' scoped>
 .youhou_setting-btn{
     width: 46px;
     height: 46px;
@@ -98,45 +161,15 @@ export default {
     border-radius: 50%;
     z-index: 1234567;
 }
-.youhou_setting-btn .el-drawer__body{
-    background: #F2F6FC;
-}
 .youhou_drawer{
-    position: relative;
     z-index: 123456 !important;
-    /* background: #EBEEF5; */
 }
-.youhou_drawer .el-divider__text{
-    font-size: 12px;
-    color: #DCDFE6;
+.youhou_debug-tool-wrap{
+position: fixed;
+bottom: 40px;
+right: 40px;
+z-index: 1234567;
+
 }
-.youhou_drawer .el-divider{
-    /* background: rgb(17 106 248); */
-}
-.youhou_drawer .youhou_header{
-    padding: 0 10px;
-    margin-top: 10px;
-    display: flex;
-    color: rgb(64 158 255);;
-    font-weight: 800;
-    justify-content: space-between
-}
- .youhou_drawer .el-divider--horizontal{
-    margin: 10px 0;
-    height: 0.1px
- }
- .youhou_drawer_box{
-    position: absolute;
-    top:98px;
-    border-radius: 4px;
-    bottom: 0;
-    right: 0;
-    left: 0;
-    padding: 10px;
-    overflow-x: hidden;
-    overflow-y: auto;
-    background: #fff;
-    /* border: 1px solid rgb(220 223 230); */
- }
  
 </style>

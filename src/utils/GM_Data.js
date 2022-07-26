@@ -13,7 +13,7 @@ const saveLoginInfo = (response) => {
     //只有登录成功后才保存信息
     if(response.config.url !== '/api/meos/EMS_SaaS_Web/Spring/MVC/entrance/unifier/loginUserServiceForEncrypt') return
     let result = JSON.parse(response.response) 
-    if(result.content[0].resultType == '13') return alert('该账号没有配置权限包，请在用户信息中进行配置！！')
+    // if(result.content[0].resultType == '13') return alert('该账号没有配置权限包，请在用户信息中进行配置！！')
     if(result.content[0].resultType != '1' &&  result.content[0].resultType != 1 ) return
 
     //获取本地储存的登录信息

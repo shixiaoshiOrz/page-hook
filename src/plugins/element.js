@@ -1,4 +1,4 @@
-import { Input,Switch, Select, Button,Table,Tag,Card, Message,Drawer,Empty,Divider,Collapse,CollapseItem,TableColumn ,MessageBox,Link} from 'element-ui';
+import { Input,Switch, Select,CheckboxGroup, Dialog,Button,Table,Tag,Card,Checkbox, Message,Drawer,Empty,Divider,Collapse,CollapseItem,TableColumn ,Badge,MessageBox,Link} from 'element-ui';
 let element = {
   install: function (Vue) {
     Vue.use(Empty);
@@ -15,6 +15,12 @@ let element = {
     Vue.use(TableColumn);
     Vue.use(CollapseItem);
     Vue.use(Link);
+    Vue.use(Badge);
+    Vue.use(Checkbox);
+    Vue.use(CheckboxGroup);
+     Vue.use(Dialog);
+
+    
     Vue.prototype.$message = Message;
     Vue.prototype.$confirm = MessageBox.confirm;
     Vue.prototype.$ELEMENT = { size: 'small'};

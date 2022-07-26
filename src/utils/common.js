@@ -1,23 +1,13 @@
-//根据config信息生成id
-const getConfigId = function(config){
-    if(config.method === 'POST' || config.method === 'post'){
-        //获取请求名称-url的最后一位
-        let urlName = getUrlName(config.url)
-        //获取请求体长度
-        let bodyLength = config.body?.length || 0
-        //获取请求体数字字符
-        let arr = config.body.match(/\d+/g)  || ['0'] 
-        let arrStr = arr.join("");
-        //获取汉字内容
-        let names = config.body.match(/[\u4e00-\u9fa5]/g) || ['请求体无汉字'];
-        let nameStr = names.join("");
-        //创建唯一id 请求名 + 请求长度 + 数字字符 + 汉字内容
-        let str = urlName + bodyLength + arrStr + nameStr
-        return set16code(str)
 
-    }else if(config.method === 'GET' || config.method === 'get'){
+import md5 from 'js-md5';
+//根据参数生成id
+const getConfigId = function(config) {
+    let method = config?.method || ""
+    let url = config?.url || ""
+    let body = config?.body || ""
+    // console.log(md5( method + url + body));
+    return md5( method + url + body)
 
-    }
 }
 const getUrlName = function(url){
     return url.split('/')[url.split('/').length -1] || '暂无信息'

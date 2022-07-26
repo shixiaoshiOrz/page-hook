@@ -1,6 +1,8 @@
 import Vue from 'vue';
 import vDrag from "./v-drag";
 import JsonExcel from 'vue-json-excel'
+import CodeEditor from 'bin-code-editor';
+// import 'bin-code-editor/lib/style/index.css';
 
 const domMonut = (idName,component,condition=true) => {
     let div = document.createElement("div");
@@ -16,6 +18,7 @@ export default {
         Vue.use(vDrag,{directiveName:'drag'});
         Vue.$domMonut = domMonut;
         Vue.component('downloadExcel', JsonExcel)
+        Vue.use(CodeEditor);
     }
 }
 

@@ -1,10 +1,9 @@
 <template>
-  <div>
+  <div class="youhou_setting-box">
     <div class="youhou_header">
         <div style="fontSize:20px">标准产品4.0版本谷歌浏览器插件</div>
-        <div></div>
-        </div>
-    <el-divider content-position="right" style="fontSize:12px">v1.0.0版本</el-divider>
+    </div>
+    <el-divider content-position="right" style="fontSize:12px;display:block">v1.0.0版本</el-divider>
     <dradList @menuItem='menuItem'></dradList>  
     <div class="youhou_drawer_box">
         <keep-alive>
@@ -60,26 +59,28 @@ export default {
 }
 </script>
 
-<style>
-.youhou_drawer .youhou_header{
+<style lang="less" scoped>
+.youhou_setting-box{
+    display: flex;
+    flex-flow: column;
+    height: 100vh;
+    justify-content: space-between;
+    .youhou_header{
     padding: 0 10px;
     margin-top: 10px;
     display: flex;
     color: rgb(64 158 255);;
     font-weight: 800;
     justify-content: space-between
-}
+    }
  .youhou_drawer_box{
-    position: absolute;
-    top:98px;
+    flex:1;
     border-radius: 4px;
-    bottom: 0;
-    right: 0;
-    left: 0;
     padding: 10px;
-    overflow-x: hidden;
     overflow-y: auto;
     background: #fff;
-    /* border: 1px solid rgb(220 223 230); */
  }
+}
+
+
 </style>
