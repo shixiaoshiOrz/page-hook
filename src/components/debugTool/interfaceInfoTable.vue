@@ -33,11 +33,11 @@
             <span>是否下载请求参数和响应参数？</span>
             <span slot="footer" style="display:flex;justify-content: end;">
                 <download-excel style="margin-right:10px" :data = "tableData" 
-                    :fields = "json_fields1" :name="tableData[0].siteName + '接口信息' + time">
+                    :fields = "json_fields1" :name="tableData[0].siteName + '接口信息' + time + '.xls'">
                     <el-button type="primary" plain @click="dialogVisible = false">否</el-button>
                 </download-excel>
                 <download-excel class = "export-excel-wrapper" :data = "tableData" 
-                    :fields = "json_fields" :name="tableData[0].siteName + '接口信息' + time">
+                    :fields = "json_fields" :name="tableData[0].siteName + '接口信息' + time +'.xls'">
                     <el-button type="primary"  @click="dialogVisible = false">是</el-button>
                 </download-excel>
             </span>

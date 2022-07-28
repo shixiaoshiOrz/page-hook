@@ -14,10 +14,9 @@ var eventLoad = events[0],
 
 var prototype = 'prototype';
 
-
 export function proxy(proxy, win) {
   win = win || window;
-  if (win['__xhr']) throw "Ajax is already hooked.";
+  if (win['__xhr-gcshi']) return;
   return proxyAjax(proxy, win);
 }
 

@@ -3,7 +3,7 @@
     <div class="youhou_header">
         <div style="fontSize:20px">标准产品4.0版本谷歌浏览器插件</div>
     </div>
-    <el-divider content-position="right" style="fontSize:12px;display:block">v1.0.0版本</el-divider>
+    <el-divider content-position="right" style="fontSize:12px;display:block">v1.1.0测试版</el-divider>
     <dradList @menuItem='menuItem'></dradList>  
     <div class="youhou_drawer_box">
         <keep-alive>

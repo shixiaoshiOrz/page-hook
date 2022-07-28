@@ -5,8 +5,11 @@ import tool from './plugins/tool';
 import './style/reset.less'
 import 'element-ui/lib/theme-chalk/index.css';
 
+
 Vue.use(element);
 Vue.use(tool);
+
+
 Vue.config.productionTip = false
 window = unsafeWindow
 Vue.prototype.$EventBus = new Vue()

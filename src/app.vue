@@ -29,7 +29,7 @@ import switchWrap from "./components/toolbtn/switch.vue"
 import addtoolWrap from './components/toolbtn/toolBtnWrap.vue'
 import drawerWrap from './components/standardInfo/drawerWrap.vue'
 import debugDrawer from './components/debugTool/debugDrawer.vue'
-
+import log from './plugins/log.js'
 export default {
     data(){
         return {
@@ -49,31 +49,34 @@ export default {
     beforeDestroy(){
         window.removeEventListener('load',this.load)
         window.removeEventListener('popstate',this.popstate)
+        GM_setObject('SHOWDEBUGTOOL',null)
     },
     mounted(){
+        log.pretty(`[persagy-tools] v1.2.0`, `欢迎使用标准产品辅助工具，目前兼容到4.2版本！有疑问请联系开发者shiguangchao@persagy.com`, '#ee0067')
+        if(window.__xhr){
+            window.XMLHttpRequest = window.__xhr;
+            window.__xhr = undefined;
+        }
         //初始化界面大小
          const menuList = GM_getObject('MENULIST') || null
          if(menuList && menuList[0].id) {
            let id = menuList[0].id
            this.menuId(id)
          } 
-        //拦截框架的所有接口
         ajaxHook(this)
         window.addEventListener('load',this.load),
         window.addEventListener('popstate',this.popstate)
+        
 
     },
    methods:{
-        //获取子应用所有信息
+    //获取子应用所有信息   暂不支持4.3版本
     async queryALLInfo(type){
-        
-          
         let standardUrlList = GM_getObject('LOGININFOARRAY') || []
         if(standardUrlList.length == 0) return false
         var itemInfo = standardUrlList.find(res => res.fullUrl.indexOf(location.host) > 1)
         if(!itemInfo) return false
         let loginName = itemInfo.userName
-      
         const parmas = {loginName: loginName,loginDevice: "PC",isAdminLogin:isAdminLogin}
         let data = await GM_ajax({
             url:'/api/meos/EMS_SaaS_Web/Spring/MVC/entrance/unifier/getPersonByUserNameService',
@@ -90,10 +93,15 @@ export default {
         this.locationHref = location.href
     },
     load(){
+        //清除4.3版本自带的ajaxhook
+        if(window.__xhr){
+            window.XMLHttpRequest = window.__xhr;
+            window.__xhr = undefined;
+            ajaxHook(this)
+        }
         this.locationHref = location.href
         this.addtoolWrap()
         this.switchUrl()
-        
         let iframe = document.querySelector('iframe')
         if(iframe){
             ajaxHook(this,iframe.contentWindow)
@@ -104,10 +112,12 @@ export default {
         GM_setObject('SHOWDEBUGTOOL',null)
     },
     debugToolDrawerVisible(){
+        //没有触发popstate事件，直接打开面板
         if(!this.stopDebugTool){
             this.debugToolDrawer = true
         }else{
-            location.reload()
+            //如果触发了该事件，强制刷新页面
+            location.reload(true)
         }
     },
     domMount(dom,className,componet,propsData){

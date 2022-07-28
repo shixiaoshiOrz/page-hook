@@ -1,4 +1,4 @@
-import {proxy, unProxy} from "ajax-hook";
+import {proxy, unProxy} from "../ajax-hook";
 import { GM_setObject,GM_getObject ,GM_ajax} from './GM_tools';
 import { saveLoginInfo } from './GM_Data';
 import {ajaxIntercept,responseIntercept,responseHook,bodyHook } from './ajaxIntercept.js'

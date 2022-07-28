@@ -1,17 +1,21 @@
 // ==UserScript==
-// @name         标准产品辅助工具
+// @name         persagyTool
 // @namespace    http://tampermonkey.net/
-// @version      0.1
-// @description  try to take over the world!
-// @author       gcshi
+// @version      1.2.0
+// @description  标准产品辅助工具!
+// @author       You
 // @match        http://*/*
 // @match        https://*/*
+// @exclude      http://mail.persagy.com/*
+// @exclude      https://www.yuque.com/*
+// @run-at       document-body
 // @grant        unsafewindow
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
 // @grant        GM_listValues
 // @grant        GM_setClipboard
-// @noframes
+// @grant        GM_registerMenuCommand
 // @connect      *
+// @noframes
 // ==/UserScript==

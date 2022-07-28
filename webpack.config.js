@@ -2,7 +2,7 @@ const path = require('path')
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
 module.exports = {
-  mode: 'development',
+  // mode: 'development',
   output: {
    publicPath: './',  // 具体相对路径还需要根据实际情况判断，比如也可能是 ../
    filename: 'tool.js'
