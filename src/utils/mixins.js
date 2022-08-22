@@ -1,14 +1,11 @@
 
 import { GM_setObject,GM_getObject ,GM_ajax} from '../utils/GM_tools'
-import { setUrlItem } from './GM_Data'
+// import { setUrlItem } from './GM_Data'
 export default {
   data () {
     return {
-      loginBtnClick:null,
-      //输入框DOM
-      passwordInput:document.querySelector(".el-input--suffix input[placeholder=密码]"),
-      //用户名Dom
-      usernameInput:document.querySelector(".el-input--suffix input[name=username]") 
+
+     
     } 
   },
   computed:{
@@ -19,32 +16,8 @@ export default {
         return isSaasweb && isNotLocalhost
     }
   },
-  created () {
-    //监听登录按钮点击事件
-    this.loginBtnClick = ()=> this.autoRecordUrl()
-    let login_btn = document.querySelector(".login_btn")
-    if(login_btn){
-        login_btn.addEventListener("click",this.loginBtnClick);
-    }
-  },
+
   methods: {
-    //自动记录标准产品url
-    autoRecordUrl(){
-        const item = {
-            fullUrl:location.href,
-            userName:this.usernameInput.value,
-            title:document.querySelector(".login_title")?.innerText || '--',
-            password:this.passwordInput.value,
-            child:[
-              {
-                fullUrl:location.href,
-                title:document.querySelector(".login_title")?.innerText || '--',
-                notice:this.usernameInput.value + '/' + this.passwordInput.value,
-              }
-            ]
-        }
-        setUrlItem(item);
-    },
     //根据登录名获取用户信息
     async getUserInfoByName(parmas){
         let data = await GM_ajax({

@@ -115,5 +115,6 @@ export {
     get16code,
     getConfigId,
     getUrlName,
-    queryMenutree
+    queryMenutree,
+    compare
 }

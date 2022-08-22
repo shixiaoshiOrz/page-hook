@@ -18,9 +18,7 @@ let element = {
     Vue.use(Badge);
     Vue.use(Checkbox);
     Vue.use(CheckboxGroup);
-     Vue.use(Dialog);
-
-    
+    Vue.use(Dialog);
     Vue.prototype.$message = Message;
     Vue.prototype.$confirm = MessageBox.confirm;
     Vue.prototype.$ELEMENT = { size: 'small'};

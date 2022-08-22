@@ -3,7 +3,11 @@
     <div class="youhou-children-serach" v-show="!isAdmin">
         <el-input placeholder="请输入搜索内容" v-model="serach" size="small" :clearable='true'></el-input>
         <el-button type="primary" size="small" style="margin-left:10px" @click="serachItem()">搜索</el-button>
-        <el-button type="danger" size="small" @click="clear()">清空</el-button>
+        <el-button type="danger" size="small" @click="clear()"  style="margin-right:10px">清空</el-button>
+        <download-excel class = "export-excel-wrapper" :data = "downloadRowData" 
+            :fields = "json_fields" :name="title + '菜单信息' +time + '.xls'">
+            <el-button type="success" size="small">下载</el-button>
+        </download-excel>
     </div>
 
     <template v-if='serachArray.length > 0 && serachInfoVisible'>
@@ -52,10 +56,23 @@
 <script>
 import { GM_ajax } from '../../utils/GM_tools'
 import mixins from '../../utils/mixins.js'
-import { queryMenutree } from '../../utils/common.js'
+import { GM_setObject,GM_getObject } from '../../utils/GM_tools'
+import { queryMenutree,compare } from '../../utils/common.js'
 export default {
     data(){
         return{
+            json_fields:{
+                "模块名称":"authorizationName",
+                "服务名称":"serveName",
+                "前端路由":"authorizationId",
+                "模块链接":"jumpUrl",
+                "二级菜单":"secondName",
+                "一级菜单":"productName",
+
+            },
+            title:"标准产品",
+            downloadRowData:[],
+            excelpage:[],
             serach:"",
             serachInfoVisible:false,
             isHaveInfo:true,
@@ -82,6 +99,31 @@ export default {
     created(){
         //获取qiankun子组件
         this.queryQiankunInfo()
+        let standardUrlList = GM_getObject('LOGININFOARRAY') || []
+        if(standardUrlList.length > 0) {
+            var itemInfo = standardUrlList.find(res => res.fullUrl.indexOf(location.host) > 1)
+            this.title = itemInfo.title
+        }
+        
+    },
+    computed:{
+        time(){
+            var d = new Date();
+            var year = d.getFullYear();
+            var month = change(d.getMonth() + 1);
+            var day = change(d.getDate());
+            var hour = change(d.getHours());
+            var minute = change(d.getMinutes());
+            var second = change(d.getSeconds());
+            function change(t) {
+                if (t < 10) {
+                    return "0" + t;
+                } else {
+                    return t;
+                }
+            }
+            return year + month + day +hour + minute +second;
+        },
     },
     mounted(){
           //根据是否运维平台查询子应用信息
@@ -120,6 +162,22 @@ export default {
                 let appInfoArray = data?.content?.[0]?.authorizations
                 //原始数据备份
                 this.rowAppInfoArray = JSON.parse(JSON.stringify(appInfoArray))
+                //生成下载的表格数据
+                this.downloadRowData = this.rowAppInfoArray.filter(res => {
+                    return res.functionUrl
+                })
+                this.downloadRowData.sort(compare("productOrder"));
+                this.downloadRowData.forEach(res =>{
+                    let item = this.rowAppInfoArray.find( item => item.authorizationId == res.authorizationParentId)
+                    res.secondName = item.authorizationName ?  item.authorizationName :""
+                    res.jumpUrl = `${res.functionUrl}${res.authorizationId}?loginName=${this.userInfo.name}&project_id=${this.userInfo.project_id}`
+                   let nameArray = res.functionUrl.split("/")
+                   if(res.functionUrl.split("")[res.functionUrl.split("").length - 1] == "/"){  
+                      res.serveName = nameArray[nameArray.length - 2]
+                    }else{
+                      res.serveName = nameArray[nameArray.length - 3]
+                    }
+                })
                 //原始
                 this.appArray = queryMenutree(appInfoArray)
             }

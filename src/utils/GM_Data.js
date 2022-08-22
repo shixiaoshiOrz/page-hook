@@ -15,7 +15,6 @@ const saveLoginInfo = (response) => {
     let result = JSON.parse(response.response) 
     // if(result.content[0].resultType == '13') return alert('该账号没有配置权限包，请在用户信息中进行配置！！')
     if(result.content[0].resultType != '1' &&  result.content[0].resultType != 1 ) return
-
     //获取本地储存的登录信息
     let LoginInfoArray = GM_getObject('LOGININFOARRAY') || []
     //没有数据，创建数据

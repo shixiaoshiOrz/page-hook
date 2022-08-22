@@ -11,7 +11,7 @@
             <childrenInfo v-if="selectid == 4 && isStandUrl"></childrenInfo>
             <projectInfo v-if="selectid == 3 && isStandUrl"></projectInfo>
             <favoritesSite v-if="selectid == 5"></favoritesSite>
-            <userInfo v-if="selectid == 2 && isStandUrl"></userInfo>
+            <userInfo v-if="selectid == 2 && isStandUrl" :isHighVersion="isHighVersion"></userInfo>
         </keep-alive>
         <el-empty description="仅标准产品才可以使用此功能！" v-if="(selectid == 2 || selectid == 4 || selectid == 3) && !isStandUrl"  ></el-empty>
     </div> 
@@ -29,6 +29,9 @@ import userInfo from './userInfo.vue'
 import { GM_setObject,GM_getObject } from '../../utils/GM_tools'
 export default {
     components:{ mContentStandard ,dradList,childrenInfo,projectInfo,favoritesSite,userInfo},
+    props:{
+        isHighVersion:Boolean
+    },
     data(){
         return {
             component:[
@@ -47,8 +50,11 @@ export default {
         }
     },
     created(){
-        let selectItem = GM_getObject('MENULIST')
-        this.selectid = selectItem[0].id
+        let selectItem = GM_getObject('MENULIST') || null
+        if(selectItem) {
+            this.selectid = selectItem[0].id
+        }
+        
     },
     methods:{
         menuItem(v){

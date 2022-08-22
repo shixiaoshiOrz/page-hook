@@ -1,172 +1,157 @@
 <template>
     <div class="youhou_tools_by_gcshi" >
-
-        <div class="youhou_setting-btn" v-drag>
-            <el-button circle type="danger" @click="drawer = true" >
-                <svg t="1655972115714" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2593" width="20" height="20"><path d="M883.824 603.006h-46.922c-7.612 27.613-18.546 53.772-32.526 78.063l43.357 43.322c27.752 27.751 27.752 72.735 0 100.485l-25.121 25.122c-27.751 27.752-72.735 27.752-100.486 0l-43.634-43.634c-24.187 13.77-50.278 24.535-77.75 32.007v45.502c0 39.241-31.8 71.04-71.04 71.04H494.2c-39.24 0-71.074-31.799-71.074-71.04V838.37c-27.439-7.473-53.53-18.236-77.751-32.007l-43.635 43.634c-27.715 27.752-72.699 27.752-100.45 0l-25.122-25.122c-27.751-27.75-27.751-72.734 0-100.485l43.357-43.322c-13.98-24.29-24.914-50.45-32.56-78.063h-46.887c-39.24 0-71.04-31.8-71.04-71.004v-35.539c0-39.24 31.8-71.04 71.04-71.04h46.332c7.336-27.335 17.856-53.357 31.454-77.508l-41.696-41.663c-27.751-27.749-27.751-72.733 0-100.485l25.122-25.12c27.751-27.754 72.735-27.754 100.45 0l40.866 40.9c25.018-14.569 52.008-25.917 80.521-33.704v-47.717c0-39.242 31.834-71.04 71.074-71.04h35.502c39.24 0 71.04 31.798 71.04 71.04v47.717c28.546 7.786 55.535 19.134 80.52 33.704l40.865-40.9c27.751-27.754 72.735-27.754 100.486 0l25.121 25.12c27.752 27.752 27.752 72.736 0 100.485l-41.696 41.663c13.6 24.152 24.084 50.173 31.454 77.507h46.333c39.24 0 71.038 31.801 71.038 71.041v35.539c-0.002 39.203-31.801 71.004-71.04 71.004z m-371.876-283.05c-107.89 0-195.364 87.475-195.364 195.367 0 107.89 87.474 195.364 195.364 195.364 107.893 0 195.367-87.474 195.367-195.364s-87.473-195.367-195.367-195.367z m0 281.94c-49.03 0-88.824-39.721-88.824-88.788 0-49.068 39.794-88.79 88.824-88.79 49.033 0 88.793 39.72 88.793 88.79 0 49.066-39.76 88.788-88.793 88.788z" p-id="2594" fill="#ffffff"></path></svg>
-            </el-button>
-        </div>
-
-
+        <!-- 标准产品信息梳理 -->
+        <div class="youhou_info" v-drag @click="drawer = true">3+</div>
         <el-drawer :visible.sync="drawer" :with-header="false" :size="size + '%'" class="youhou_drawer">
-            <drawerWrap @deletedUrl='deletedUrl' @menuId='menuId'></drawerWrap>
+            <drawerWrap 
+                @deletedUrl='deletedUrl' 
+                @menuId='changePanelSize' 
+                v-if="drawer"
+                :isHighVersion="isHighVersion"
+            ></drawerWrap>
         </el-drawer>
-
-        <div class="youhou_debug-tool-wrap" @click="debugToolDrawerVisible()" v-if="debugToolVisible" v-drag>
-            <el-button type="warning">接口信息</el-button>
-        </div>
-        <debugDrawer @debugToolDrawer='debugToolDrawer = false' :ajaxHookArray='ajaxHookArray' v-if="debugToolDrawer"></debugDrawer>
-
+        <!-- 接口信息 -->
+        <div class="youhou_hook" @click="ajaxDrawer = true"  v-drag>请求信息</div>
+        <debugDrawer 
+            :ajaxHookArray='ajaxHookArray' 
+            v-if="ajaxDrawer"
+            @clearList="ajaxHookArray = []"
+            @close="ajaxDrawer = false"
+        ></debugDrawer>
     </div>
-
 </template>
 
 <script>
-import Vue from 'vue';
-import { GM_setObject,GM_getObject ,GM_ajax} from './utils/GM_tools'
-import { ajaxHook ,unProxy} from './utils/ajaxHook.js'
-import switchWrap from "./components/toolbtn/switch.vue"
-import addtoolWrap from './components/toolbtn/toolBtnWrap.vue'
+import { GM_getObject } from './utils/GM_tools'
+import { ajaxHook } from './utils/ajaxHook.js'
 import drawerWrap from './components/standardInfo/drawerWrap.vue'
 import debugDrawer from './components/debugTool/debugDrawer.vue'
 import log from './plugins/log.js'
+import createDom  from "./utils/dom.js"
 export default {
     data(){
         return {
-            drawer: false,
+            drawer: false,  //标准产品信息
+            size:50,        //信息面板大小
+
+            optionName:"页面刷新加载",//hookinfo触发的dom文本信息
+            
             deletedFulUrl:"",
-            ajaxHookArray:[],//ajaxHook暂存信息
-            size:50,
-
-            debugToolVisible:true,
-            debugToolDrawer:false,
-            stopDebugTool:false,
-            locationHref:null,
-
+            ajaxHookArray:[],       //ajaxHook暂存信息
+            
+            ajaxDrawer:false,        //请求信息面板
+            //是否4.3及以上版本。通过是否存在ajax-hook判断
+            isHighVersion:false,
         }
     },
     components:{ drawerWrap ,debugDrawer},
+    created(){
+       this.init() 
+        //清除4.3版本自带的ajaxhook
+        if(window.__xhr) this.clearXhr()
+        ajaxHook(this)
+    },
     beforeDestroy(){
         window.removeEventListener('load',this.load)
         window.removeEventListener('popstate',this.popstate)
-        GM_setObject('SHOWDEBUGTOOL',null)
     },
-    mounted(){
-        log.pretty(`[persagy-tools] v1.2.0`, `欢迎使用标准产品辅助工具，目前兼容到4.2版本！有疑问请联系开发者shiguangchao@persagy.com`, '#ee0067')
-        if(window.__xhr){
+    methods:{
+        init(){
+            //全局绑定事件,用来获取当前对象名称
+            window.addEventListener('click',(e)=>{
+                this.optionName =  `点击【${e.target?.innerText || "--"}】`    
+            },true)
+            //主资源加载完毕时
+            window.addEventListener('load',this.load),
+            //当页面进行切换。路由改变时会触发popstate事件
+            window.addEventListener('popstate',this.popstate)
+            //工具名称打印
+            log.pretty(`[persagy-tools] v1.2.0`, `欢迎使用标准产品辅助工具，目前兼容到4.2版本！有疑问请联系开发者shiguangchao@persagy.com`, '#ee0067')
+            //DOM加载后，初始化界面大小
+            this.initPanelSize()
+        },
+        //初始化信息面板大小
+        initPanelSize(){
+            const menuList = GM_getObject('MENULIST') || null
+            if(menuList && menuList[0].id) {
+            let id = menuList[0].id
+            this.changePanelSize(id)
+            }
+        },
+        //如果页面本身存在ajax-hook对象，清除ajaxhook对象
+        clearXhr(){
             window.XMLHttpRequest = window.__xhr;
             window.__xhr = undefined;
-        }
-        //初始化界面大小
-         const menuList = GM_getObject('MENULIST') || null
-         if(menuList && menuList[0].id) {
-           let id = menuList[0].id
-           this.menuId(id)
-         } 
-        ajaxHook(this)
-        window.addEventListener('load',this.load),
-        window.addEventListener('popstate',this.popstate)
-        
-
+            this.isHighVersion = true
+        },
+        //资源加载事件
+        load(){
+            //如果load时间触发完,出现xhr代理对象，清空该对象并重新代理
+            if(window.__xhr){
+                this.clearXhr()
+                ajaxHook(this)
+            }
+            //创建工具按钮
+            createDom(this.isHighVersion,this.deletedFulUrl)
+            //子应用注入ajaxHook
+            let iframe = document.querySelector('iframe')
+            if(iframe){
+                ajaxHook(this,iframe.contentWindow)
+                //全局绑定事件,用来获取当前对象名称
+                iframe.contentWindow.addEventListener('click',(e)=>{
+                    this.optionName = `点击【${e.target?.innerText || "--"}】`   
+                },true)
+            }
+        },
+        popstate(){
+            //路由切换时，iframe会发生变化，给新的iframe绑定ajaxhook
+            let iframe = document.querySelector('iframe')
+            if(iframe){
+                ajaxHook(this,iframe.contentWindow)
+                iframe.contentWindow.addEventListener('click',(e)=>{
+                    this.optionName = `点击【${e.target?.innerText || "--"}】`   
+                },true)
+            }
+        },
+        //切换面板时，改变其宽度
+        changePanelSize(id){
+            if(id ==2 ){
+                this.size = 90
+            }else if(id == 1){
+                this.size = 65
+            }else{
+                this.size = 50
+            }
+        },
+        //删除的url
+        deletedUrl(url){
+            this.deletedFulUrl = url
+        },
     },
-   methods:{
-    //获取子应用所有信息   暂不支持4.3版本
-    async queryALLInfo(type){
-        let standardUrlList = GM_getObject('LOGININFOARRAY') || []
-        if(standardUrlList.length == 0) return false
-        var itemInfo = standardUrlList.find(res => res.fullUrl.indexOf(location.host) > 1)
-        if(!itemInfo) return false
-        let loginName = itemInfo.userName
-        const parmas = {loginName: loginName,loginDevice: "PC",isAdminLogin:isAdminLogin}
-        let data = await GM_ajax({
-            url:'/api/meos/EMS_SaaS_Web/Spring/MVC/entrance/unifier/getPersonByUserNameService',
-            data:JSON.stringify(parmas)
-        })
-        if(!data) return false
-        let result = JSON.parse(data)
-        if(result.content[0].resultType == 1) return result
-    },
-    popstate(){
-        if(this.locationHref.indexOf('/login') > -1 ) return this.locationHref = location.href
-        this.stopDebugTool = true
-        GM_setObject('SHOWDEBUGTOOL',true)
-        this.locationHref = location.href
-    },
-    load(){
-        //清除4.3版本自带的ajaxhook
-        if(window.__xhr){
-            window.XMLHttpRequest = window.__xhr;
-            window.__xhr = undefined;
-            ajaxHook(this)
-        }
-        this.locationHref = location.href
-        this.addtoolWrap()
-        this.switchUrl()
-        let iframe = document.querySelector('iframe')
-        if(iframe){
-            ajaxHook(this,iframe.contentWindow)
-        }
-        if(GM_getObject('SHOWDEBUGTOOL')){
-            this.debugToolDrawer = true
-        }
-        GM_setObject('SHOWDEBUGTOOL',null)
-    },
-    debugToolDrawerVisible(){
-        //没有触发popstate事件，直接打开面板
-        if(!this.stopDebugTool){
-            this.debugToolDrawer = true
-        }else{
-            //如果触发了该事件，强制刷新页面
-            location.reload(true)
+    watch:{
+        //给每一个hookinfo绑定一个触发的说明
+        ajaxHookArray:{
+            handler(v){
+                if(v.length == 0) return
+                v[v.length - 1].name = this.optionName
+            },deep:true
         }
     },
-    domMount(dom,className,componet,propsData){
-        if(!dom) return
-        const div = document.createElement('div')
-        div.className = className
-        dom.appendChild(div)
-        var Profile = Vue.extend(componet)
-        if(propsData){
-            new Profile({propsData}).$mount( '.' + className )
-        }else{
-            new Profile().$mount('.' + className)
-        }  
-    },
-    //增加工具栏
-    addtoolWrap(){
-        let dom = document.querySelector(".login_forms");
-        this.domMount(dom,'youhou_toolWrap',addtoolWrap)
-    },
-    //增加平台切换按钮
-    switchUrl(){
-        let dom = document.querySelector(".login_forms");
-        let propsData = { deletedFulUrl:this.deletedFulUrl }
-        this.domMount(dom,'youhou_swicth',switchWrap,propsData)
-    },
-    //删除的url
-    deletedUrl(url){
-        this.deletedFulUrl = url
-    },
-    menuId(v){
-        if(v ==2 ){
-            this.size = 90
-        }else if( v == 1){
-            this.size = 65
-        }else{
-            this.size = 50
-        }
-    }
-   }
 }
 </script>
 
 <style lang='less' scoped>
-.youhou_setting-btn{
+.youhou_info{
     width: 46px;
     height: 46px;
     position: fixed;
     bottom: 40px;
+    font-size:14px;
     left: 40px;
+    background: rgb(245 108 108);
+    text-align: center;
+    line-height: 46px;
+    color:#fff;
     cursor: pointer;
     border-radius: 50%;
     z-index: 1234567;
@@ -174,12 +159,19 @@ export default {
 .youhou_drawer{
     z-index: 123456 !important;
 }
-.youhou_debug-tool-wrap{
-position: fixed;
-bottom: 40px;
-right: 40px;
-z-index: 1234567;
-
+.youhou_hook{
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+    z-index: 1234567;
+    width: 98px;
+    height: 35px;
+    text-align: center;
+    line-height: 35px;
+    color: #fff;
+    cursor:pointer;
+    background: rgb(230 162 60);
+    border-radius: 5px;
 }
  
 </style>

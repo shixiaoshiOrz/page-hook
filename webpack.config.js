@@ -1,8 +1,9 @@
-const path = require('path')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+const path = require('path')
 module.exports = {
-  // mode: 'development',
+  entry:"./src/index.js",//默认配置值
   output: {
    publicPath: './',  // 具体相对路径还需要根据实际情况判断，比如也可能是 ../
    filename: 'tool.js'
@@ -43,8 +44,9 @@ module.exports = {
   plugins: [
     // 请确保引入这个插件来施展魔法
     new VueLoaderPlugin(),
-    new UglifyJsPlugin()
+    new UglifyJsPlugin(),
+    new HtmlWebpackPlugin({title:"persagyTool",template:'./index.html'}),
   ],
-  
+
 
 }

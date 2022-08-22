@@ -14,7 +14,7 @@
         <span>显示密码：</span>
         <el-switch v-model="showPassword" active-color="#13ce66" inactive-color="#F56C6C" @change="showPasswordValueChange()"></el-switch>
     </div>
-    <div class="tool">
+    <div class="tool" v-show="!isHighVersion">
         <span class="youhou_login" title="点击查询可用登录名" @click="queryInfo()">免密登录</span>
         <el-switch 
             v-model="noPasswordValue" 
@@ -38,6 +38,7 @@
 import loginNameTable from './loginNameTbale.vue'
 import mixins from '../../utils/mixins'
 import { GM_setObject,GM_getObject } from '../../utils/GM_tools'
+import { passwordInput ,usernameInput} from "../../utils/dom.js"
 export default {
     components:{ loginNameTable },
     data() {
@@ -47,7 +48,11 @@ export default {
             infoValue:GM_getObject('INFOVALUE'),
             showTable:false,//登录名查询弹框,
             queryBoxVisible:false,
+            itemInfo:null,
         }
+    },
+    props:{
+        isHighVersion:Boolean
     },
     mixins: [mixins],
     mounted(){
@@ -63,13 +68,14 @@ export default {
             
         })
         //信息填充 - 初始化
-        if(GM_getObject('INFOVALUE')){
-            let LoginInfoArray = GM_getObject('LOGININFOARRAY') || []
-            if(LoginInfoArray.length < 1) {
-                GM_setObject('INFOVALUE',null) 
-                return this.infoValue = false
-            }
+        let LoginInfoArray = GM_getObject('LOGININFOARRAY') || []
+        if(LoginInfoArray.length < 1) {
+            GM_setObject('INFOVALUE',null) 
+            this.infoValue = false
+        }else{
             this.itemInfo =  LoginInfoArray.find(res => res.fullUrl == location.href)
+        }
+        if(GM_getObject('INFOVALUE')){
             if(this.itemInfo) this.atuoPassword()
             else {
                 GM_setObject('INFOVALUE',null) 
@@ -77,51 +83,51 @@ export default {
             }    
         } 
         //初始化页面 - 密码明文
-        if(this.showPassword) { this.passwordInput.type = 'text' }
+        if(this.showPassword) { passwordInput.type = 'text' }
         //免密登录初始化
         if(this.noPasswordValue && location.pathname.indexOf("/login/fbms") > -1){
-            this.setInputValue(this.usernameInput,'PERSAGYADMIN')
+            this.setInputValue(usernameInput,'PERSAGYADMIN')
         }
     },
     methods:{
         //1.【显示密码】
         showPasswordValueChange(){
-            if(!this.passwordInput){
+            if(!passwordInput){
                 this.$message.warning('当前页面不支持该功能！')
                 this.showPassword = false
             }else{
                 if(this.showPassword){
-                    this.passwordInput.type = 'text'
+                    passwordInput.type = 'text'
                     GM_setObject('SHOWPASSWORD',true)
                 }else{
-                    this.passwordInput.type = 'password'
+                    passwordInput.type = 'password'
                     GM_setObject('SHOWPASSWORD',null)
                 }
             }
         },
         //2.【免密登录】
         noPassWordChange(){
-             if(!this.usernameInput){
+             if(!usernameInput){
                 this.$message.warning('当前页面不支持该功能！')
                 GM_setObject('NOPASSWORDLOGIN',false)
                 return this.noPasswordValue = false
              }else{
                 if (location.pathname.indexOf("/login/fbms") > -1){
-                    this.setInputValue(this.usernameInput,'PERSAGYADMIN')
+                    this.setInputValue(usernameInput,'PERSAGYADMIN')
                 }
                 GM_setObject('NOPASSWORDLOGIN',this.noPasswordValue)
              }
         },
         //3.【智能填充】
         async smartFill(){
-            if(!this.passwordInput || !this.usernameInput){
+            if(!passwordInput || !usernameInput){
                 this.$message.warning('当前页面不支持该功能！')
                 GM_setObject('INFOVALUE',false)
                 return this.infoValue = false
             }
             //运维平台----特殊处理
             if(location.pathname.indexOf("/login/fbms") > -1){
-                this.setInputValue(this.usernameInput,'PERSAGYADMIN')
+                this.setInputValue(usernameInput,'PERSAGYADMIN')
                 this.infoValue = false
                 return alert('暂不支持密码填充，请使用免密登录功能！')
             }
@@ -129,6 +135,7 @@ export default {
                 GM_setObject('INFOVALUE',true)
                 //标准产品信息库账号密码匹配
                 let data = this.atuoPassword()
+
                 //如果信息库无储存的账号密码，则智能获取
                 if(!data){
                     this.queryBoxVisible = true
@@ -150,10 +157,10 @@ export default {
                         let userInfoListTemp = result?.content?.[0]?.content || []
                         //过滤掉未启用权限或者停用的账号
                         let userInfoList = userInfoListTemp.filter(res => res.state === '1' && res.authorizations.length > 0)
-                        this.setInputValue(this.usernameInput,userInfoList[0].userName)
+                        this.setInputValue(usernameInput,userInfoList[0].userName)
                         const params2 = {puser: { userId: "PERSAGYADMIN",loginDevice: "PC",pd: pd},userId: userInfoList[0].userId}
                         let passwordResult = await this.getPasswordByName(params2)
-                        this.setInputValue(this.passwordInput,  passwordResult.content[0].password)
+                        this.setInputValue(passwordInput,  passwordResult.content[0].password)
                         this.queryBoxVisible = false
                     }catch(err){
                         this.queryBoxVisible = false
@@ -162,17 +169,17 @@ export default {
                     }
                 }
             }else{
-                this.setInputValue(this.usernameInput,'')
-                this.setInputValue(this.passwordInput,'')
+                this.setInputValue(usernameInput,'')
+                this.setInputValue(passwordInput,'')
                 GM_setObject('INFOVALUE',null)
             }
         },
         //密码自动填充
         atuoPassword(){
             if(!this.itemInfo) return false
-            this.setInputValue(this.usernameInput,this.itemInfo.userName)
+            this.setInputValue(usernameInput,this.itemInfo.userName)
             if(!this.itemInfo.password) return false
-            this.setInputValue(this.passwordInput,this.itemInfo.password)
+            this.setInputValue(passwordInput,this.itemInfo.password)
             return true 
         },
         //4.【信息查询】

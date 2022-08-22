@@ -2,7 +2,7 @@
   <div class="youhou_debug-tool-drawer">
     <div class="youhou_debug-tool-box" >
         <div class="youhou_debug-tool-table">
-            <interfaceInfoTable :ajaxHookArrayIfo='ajaxHookArrayIfo' @ajaxItem='getAjaxItemInfo'></interfaceInfoTable>
+            <interfaceInfoTable :ajaxHookArrayIfo='ajaxHookArrayIfo' @ajaxItem='getAjaxItemInfo' @clearList="$emit('clearList')"></interfaceInfoTable>
         </div>
         <div class="youhou_debug-tool-result" v-if="ajaxItemInfo">
             <div class="youhou_debug-result-top-header"> 
@@ -50,7 +50,7 @@
             <el-empty description="哎呀~~~么得接口信息呀"></el-empty>
         </div> 
     </div>
-    <div class="youhou_debug-tool-bac" @click="$emit('debugToolDrawer')"></div>
+    <div class="youhou_debug-tool-bac" @click="$emit('close')"></div>
   </div>
 </template>
 
@@ -86,12 +86,18 @@ export default {
     watch:{
         ajaxHookArray:{
             handler(v){
-               this.ajaxHookArrayIfo = v
-               this.ajaxItemInfo = v[0]
-               let response = this.ajaxItemInfo?.response || '{}'
-               let body = this.ajaxItemInfo?.body || '{}'
-               this.response =  JSON.stringify(JSON.parse(response),null,2)        
-               this.body =  JSON.stringify(JSON.parse(body),null,2)
+               if(!v) return
+               try{
+                this.ajaxHookArrayIfo = v
+                this.ajaxItemInfo = v[0]
+                let response = this.ajaxItemInfo?.response || '{}'
+                let body = this.ajaxItemInfo?.body || '{}'
+                this.response =  JSON.stringify(JSON.parse(response),null,2)        
+                this.body =  JSON.stringify(JSON.parse(body),null,2)
+               }catch(err){
+                console.error(err);
+               }
+               
             },
             deep:true,
             immediate:true

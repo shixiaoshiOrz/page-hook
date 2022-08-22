@@ -4,7 +4,7 @@ import { GM_setObject,GM_getObject ,GM_ajax} from './GM_tools';
 function ajaxIntercept(config,that){
     config.id = getConfigId(config)
     config.index = that.ajaxHookArray.length
-    const item = {
+    const item = {  
         headers:config?.headers?.['content-type'] || config?.headers?.accept || "" , 
         method:config?.method || "--",
         url:config?.url || "--",
@@ -13,7 +13,8 @@ function ajaxIntercept(config,that){
         status:null,                                                     //响应状态
         id:getConfigId(config),                                          //接口id
         name:config?.url?.split('/')[config.url.split('/').length -1] || "--",   //接口名称
-        index: that.ajaxHookArray.length,                               //请求index  对于重复请求的接口，该参数可以将其区别开
+        index: that.ajaxHookArray.length, 
+        name:"页面刷新加载"                             //请求index  对于重复请求的接口，该参数可以将其区别开
     }
     that.ajaxHookArray.push(item)
 }

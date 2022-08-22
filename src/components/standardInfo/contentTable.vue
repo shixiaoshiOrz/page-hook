@@ -11,7 +11,7 @@
             <div class="right">
                 <el-tag @click="add" style="margin-right:10px">{{showAddInput ? '保存' : '新增'}}</el-tag>
                 <download-excel class = "export-excel-wrapper" :data = "excelpage"  v-if="!editActive && !showAddInput"
-                    :fields = "json_fields" :name="tableData[0].title + '相关信息' + time">
+                    :fields = "json_fields" :name="tableData[0].title + '相关信息' + time + '.xls'">
                     <el-tag type="success">下载</el-tag>
                 </download-excel>
                 <el-tag @click="download" v-if="showAddInput" type="danger">取消</el-tag>

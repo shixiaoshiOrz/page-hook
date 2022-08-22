@@ -16,9 +16,11 @@ async function useNameLogin (response,that) {
     if(password) return
     const parmas = {loginName: userName,loginDevice: "PC",isAdminLogin:location.pathname.indexOf("/login/fbms") > -1}
     let data = await GM_ajax({
+        
         url:'/api/meos/EMS_SaaS_Web/Spring/MVC/entrance/unifier/getPersonByUserNameService',
         data:JSON.stringify(parmas)
     })
+    // console.log(' data : ',  data );
     if(!data) return 
     let result = JSON.parse(data)
     if(result.content[0].resultType == 1){

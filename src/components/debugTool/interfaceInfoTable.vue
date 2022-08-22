@@ -3,27 +3,24 @@
         <transition name="el-fade-in">
             <div class="youhou_hoooklist-wrap"  v-if="dialogTableVisible" >
             <div class="youhou_hoooklist-content">
-                    <div class="youhou_hooklist-header">
-                        <div><h4>接口拦截列表</h4></div>
-                        <div> 
-                            <el-button type="text" @click="deletAll()">清空所有</el-button>
-                            <div style="font-size:16px;margin-left:10px;color:rgb(144 147 153)" @click="dialogTableVisible = false">X</div>
-                        </div>
+                <div class="youhou_hooklist-header">
+                    <div><h4>接口拦截列表</h4></div>
+                    <div> 
+                        <el-button type="text" @click="deletAll()">清空所有</el-button>
+                        <div style="font-size:16px;margin-left:10px;color:rgb(144 147 153)" @click="dialogTableVisible = false">X</div>
                     </div>
-                    <div class="youhou_hooklist-table">
-                        <div v-for="(item,index) in hookList" :key="item.id">
-                            <span>{{index + 1}}</span>
-                            <span>{{item.siteName}}</span>
-                            <span>{{item.url}}</span>
-                            <span @click="deletHookItem(index)">删除</span>
-                        </div>
+                </div>
+                <div class="youhou_hooklist-table">
+                    <div v-for="(item,index) in hookList" :key="item.id">
+                        <span>{{index + 1}}</span>
+                        <span>{{item.siteName}}</span>
+                        <span>{{item.url}}</span>
+                        <span @click="deletHookItem(index)">删除</span>
                     </div>
+                </div>
             </div>     
             </div>
         </transition>
-
-
-
         <el-dialog
             title="下载提示"
             :visible.sync="dialogVisible"
@@ -48,16 +45,17 @@
             <div class="youhou_ajaxTable-header-tools">
                 <div style="display:flex;align-items: center">
                     <el-input v-model="searchStr" placeholder="请输入接口关键词!" style="width:200px" clearable @clear="clear"></el-input>
-                    <div class="button" @click="search" >接口搜索</div>
+                    <div class="button" @click="search" style="width:75px">接口搜索</div>
                     <el-checkbox-group v-model="checkList">
                         <el-checkbox label="Headers"></el-checkbox>
                         <el-checkbox label="Payload"></el-checkbox>
                         <el-checkbox label="Response"></el-checkbox>
                     </el-checkbox-group>
                 </div>
-                <div style="margin-right:10px;display: flex;cursor: pointer;">
-                    <div class="button" @click="dialogVisible = true" style="margin-top:5px" v-if="tableData.length > 0">下载</div>
-                    <el-badge :value="hookList.length > 0 ? hookList.length : ''" style="margin-left:10px;">
+                <div style="display: flex;cursor: pointer;">
+                    <div class="button" @click="dialogVisible = true" style="margin-top:5px;background: rgb(103 194 58);" v-if="tableData.length > 0">下载</div>
+                    <div class="button" style="margin-top:5px;width:75px;background:rgb(245 108 108);" @click="$emit('clearList')">清空列表</div>
+                    <el-badge :value="hookList.length > 0 ? hookList.length : ''" style="margin-left:5px;">
                         <el-button type="danger" plain @click="showTable">接口拦截列表</el-button>
                     </el-badge>
                 </div>
@@ -69,6 +67,7 @@
                 <div v-for="(item,index) in tableData" :key="index" class="youhou_ajaxTable-item" :class="{select:seletIndex == index}">
                     <div>{{index + 1}}</div>
                     <div @click="ajaxItem(item,index)" :title="item.url">{{ item.url }}</div>
+                    <div :title="item.name">{{item.name}}</div>
                     <div>
                         <el-button  @click="useSetting(item,index)" type="danger" v-if="isHookItem(item)" plain size="mini">拦截中</el-button>
                         <el-button  @click="useSetting(item,index)" type="text" v-if="!isHookItem(item)">拦截设置</el-button>
@@ -109,6 +108,7 @@ export default {
         tableData:[],
         checkList:['Headers', 'Payload', 'Response'],
         json_fields:{
+            "接口请求触发条件":"name",
             '模块名称':'siteName',
             '前端服务':'pathName',
             'Request URL':'url',
@@ -119,6 +119,7 @@ export default {
             'Response':"response",
         },
         json_fields1:{
+            "接口请求触发条件":"name",
             '模块名称':'siteName',
             '前端服务':'pathName',
             'Request URL':'url',
@@ -385,7 +386,7 @@ export default {
                 font-size: 14px;
                 border-radius: 4px;
                 height: 32px;
-                width: 86px;
+                width: 55px;
                 margin-right: 10px;
                 margin-left: 5px;
                 display: flex;
@@ -398,6 +399,9 @@ export default {
                 .el-checkbox{
                     margin-right: 10px;
                 }
+                .el-checkbox__label{
+                    font-size: 12px;
+                }
             }
             // border-bottom: 1px solid rgb(215 218 226);
             /deep/ .el-badge__content{
@@ -407,6 +411,7 @@ export default {
             /deep/  .el-input__inner{
                 border: 1px solid #409EFF;
             } 
+      
               
         }
         .youhou_ajaxTable-header-span{
@@ -418,7 +423,7 @@ export default {
                 justify-content: center;
                 align-items: center;
                 height: 100%;
-                font-size: 14px;
+                font-size: 12px;
                 border-right: 1px solid rgb(215 218 226);
                 &:nth-child(1){
                     width: 40px;
@@ -468,7 +473,16 @@ export default {
                 text-overflow: ellipsis;
                 overflow: hidden;
             }
-            &:nth-child(3){
+           &:nth-child(3){
+                padding: 0 2px;
+                width: 120px;
+                display: block;
+                white-space: nowrap;
+                text-overflow: ellipsis;
+                overflow: hidden;
+                font-size: 12px;
+            }
+            &:nth-child(4){
                 padding: 0 10px;
                 width: 80px;
             }
