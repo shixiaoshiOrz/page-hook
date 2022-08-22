@@ -32,10 +32,12 @@ function createDom (isHighVersion,deletedFulUrl) {
     if(loginBtn){
         loginBtn.addEventListener("click",()=>{
             const item = {
-                fullUrl:location.href,
-                userName:usernameInput.value,
-                title:title || '--',
-                password:passwordInput.value,
+                host:location.host,              //网站host信息
+                version:"",                          //网页版本
+                fullUrl:location.href,               //登录的网址
+                userName:usernameInput.value,        //登录用户名
+                title:title || '--',                 //标准产品名称
+                password:passwordInput.value,        //登录密码
                 child:[
                     {
                         fullUrl:location.href,
@@ -48,8 +50,6 @@ function createDom (isHighVersion,deletedFulUrl) {
             setUrlItem(item);
         });
     }
-    
-
 }
 
 //自定义dom挂载>>生成平台切换按钮、工具栏等

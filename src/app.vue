@@ -1,7 +1,7 @@
 <template>
     <div class="youhou_tools_by_gcshi" >
         <!-- 标准产品信息梳理 -->
-        <div class="youhou_info" v-drag @click="drawer = true">3+</div>
+        <div class="youhou_info" v-drag @click="drawer = true">普</div>
         <el-drawer :visible.sync="drawer" :with-header="false" :size="size + '%'" class="youhou_drawer">
             <drawerWrap 
                 @deletedUrl='deletedUrl' 
@@ -42,14 +42,15 @@ export default {
             ajaxDrawer:false,        //请求信息面板
             //是否4.3及以上版本。通过是否存在ajax-hook判断
             isHighVersion:false,
+            version:"普"
         }
     },
     components:{ drawerWrap ,debugDrawer},
-    created(){
-       this.init() 
+    created(){ 
         //清除4.3版本自带的ajaxhook
         if(window.__xhr) this.clearXhr()
         ajaxHook(this)
+        this.init()
     },
     beforeDestroy(){
         window.removeEventListener('load',this.load)

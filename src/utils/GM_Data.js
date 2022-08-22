@@ -8,22 +8,17 @@ const setUrlItem = (item)=>{
 
 //登录信息保存【数据增加】
 const saveLoginInfo = (response) => {
-    //只保存运维平台数据
+    //  非数智化平台不执行此函数
     if( location.pathname != '/saasweb/login') return
-    //只有登录成功后才保存信息
+    //  非登录接口不执行次函数
     if(response.config.url !== '/api/meos/EMS_SaaS_Web/Spring/MVC/entrance/unifier/loginUserServiceForEncrypt') return
+    // 只有登录成功后才保存信息
     let result = JSON.parse(response.response) 
-    // if(result.content[0].resultType == '13') return alert('该账号没有配置权限包，请在用户信息中进行配置！！')
     if(result.content[0].resultType != '1' &&  result.content[0].resultType != 1 ) return
-    //获取本地储存的登录信息
+    // 获取本地储存的登录信息
     let LoginInfoArray = GM_getObject('LOGININFOARRAY') || []
-    //没有数据，创建数据
-    if(LoginInfoArray.length == 0){
-        let data = []
-        data.push(urlItem)
-        return GM_setObject('LOGININFOARRAY',data)
-    }
-    let itemIndex = LoginInfoArray.findIndex(item => item.fullUrl == urlItem.fullUrl)
+    // 本地资源中查找本次登录数据（根据host查找，可以避免https和http的网址都被记录）
+    let itemIndex = LoginInfoArray.findIndex(item => item.host == urlItem.host)
     if(itemIndex > -1){
         //防止免密登录删除密码和更改加密密文
         if(urlItem.password){
@@ -34,6 +29,7 @@ const saveLoginInfo = (response) => {
             LoginInfoArray[itemIndex].child[0].notice = urlItem.userName + '/' + urlItem.password
         }
     }else{
+        //没有找到，进行数据新增
         LoginInfoArray.push(urlItem)
     }
     GM_setObject('LOGININFOARRAY',LoginInfoArray)
