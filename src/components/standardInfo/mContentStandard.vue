@@ -4,7 +4,7 @@
 
       <div class="youhou_menu-card-title">
         <div :title="item.title">{{ item.title || '暂无标题' }}</div>
-        <div style="flex:1"><el-link @click="jump(item.fullUrl)">{{ item.fullUrl || '暂无网址' }}</el-link></div>
+        <div style="flex:1"><el-link @click="window.open(item.fullUrl)">{{ item.fullUrl || '暂无网址' }}</el-link></div>
         <div>
           <el-button  @click="delet(item)" type="danger" size="mini">删除</el-button>
           <el-button @click="show(index)" size="mini">{{showChild && selectIndex == index ? '收起' : '展开'}}</el-button>
@@ -22,8 +22,8 @@
 </template>
 
 <script>
-import { GM_setObject,GM_getObject } from '../../utils/GM_tools'
 import contentTable from './contentTable.vue'
+import gmInfo from "../../api/GM_DB_INFO"
 export default {
   data(){
     return {
@@ -36,7 +36,7 @@ export default {
     contentTable
   },
   mounted(){
-    this.standardUrlList = GM_getObject('LOGININFOARRAY') || []
+    this.standardUrlList = gmInfo.getLoginInfo()
   },
   methods:{
     show(index){
@@ -54,14 +54,7 @@ export default {
       }
     },
     change(){
-      GM_setObject('LOGININFOARRAY',this.standardUrlList)
-    },
-    jump(fullUrl){
-      window.open(fullUrl)
-    },
-    copy(url){
-      this.$message.success('已经复制至剪切板！')
-      GM_setClipboard(url)
+      gmInfo.setLoginInfo(this.standardUrlList)
     },
     delet(item){
         this.$confirm('该操作将删除所有子集信息，且不可恢复！！！', '提示', {
@@ -69,15 +62,13 @@ export default {
           cancelButtonText: '取消',
           type: 'error'
         }).then(() => {
-          let itemIndex = this.standardUrlList.findIndex(res => {
-            return res.fullUrl == item.fullUrl
-          })
-          let url = this.standardUrlList[itemIndex].fullUrl
-          if(url == location.href){
+          let loginInfoIndex = gmInfo.getLoginInfoIndex("host",item.host)
+          if(loginInfoIndex == -1) return
+          if(this.standardUrlList[loginInfoIndex].host == location.host){
             this.$EventBus.$emit('deletUrl')
           }
-          this.standardUrlList.splice(itemIndex,1)
-          GM_setObject('LOGININFOARRAY',this.standardUrlList)
+          this.standardUrlList.splice(loginInfoIndex,1)
+          gmInfo.setLoginInfo(this.standardUrlList)
         }).catch(() => {
              
         });

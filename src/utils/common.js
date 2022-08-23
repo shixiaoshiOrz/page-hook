@@ -5,36 +5,11 @@ const getConfigId = function(config) {
     let method = config?.method || ""
     let url = config?.url || ""
     let body = config?.body || ""
-    // console.log(md5( method + url + body));
     return md5( method + url + body)
-
 }
 const getUrlName = function(url){
     return url.split('/')[url.split('/').length -1] || '暂无信息'
 }
-
-//设置16进制编码
-const set16code = function(str){
-    //使用请求体生成id，请求体可能会很长，很大
-    let val = "";
-    for(let i = 0; i < str.length; i++){
-        if (val == "") 
-            val = str.charCodeAt(i).toString(16);
-        else 
-            val += "," + str.charCodeAt(i).toString(16);
-    }
-    return val
-}
-//根据编码获取字符串
-const get16code = function(code){
-    let val="";
-    let arr = code.split(",");
-    for(let i = 0; i < arr.length; i++){
-        val += String.fromCharCode(parseInt(arr[i],16));
-    }
-    return val
-}
-
 function compare(prop) {
     return function (obj1, obj2) {
         var val1 = obj1[prop];
@@ -110,11 +85,47 @@ function queryMenutree(appInfoArray) {
 
     return arr;
 }
+ function isURL(str_url){ 
+         var strRegex = "^((https|http|ftp|rtsp|mms)?://)"  
+         + "?(([0-9a-z_!~*'().&=+$%-]+: )?[0-9a-z_!~*'().&=+$%-]+@)?" //ftp的user@  
+         + "(([0-9]{1,3}\.){3}[0-9]{1,3}" // IP形式的URL- 199.194.52.184  
+         + "|" // 允许IP和DOMAIN（域名） 
+         + "([0-9a-z_!~*'()-]+\.)*" // 域名- www.  
+         + "([0-9a-z][0-9a-z-]{0,61})?[0-9a-z]\." // 二级域名  
+         + "[a-z]{2,6})" // first level domain- .com or .museum  
+         + "(:[0-9]{1,4})?" // 端口- :80  
+         + "((/?)|" // a slash isn't required if there is no file name  
+         + "(/[0-9a-z_!~*'().;?:@&=+$,%#-]+)+/?)$";  
+         var re=new RegExp(strRegex);  
+       if (re.test(str_url)){ 
+            return true  
+        }else{  
+            return false  
+       } 
+    }
+
+function time(){
+    var d = new Date();
+    var year = d.getFullYear();
+    var month = change(d.getMonth() + 1);
+    var day = change(d.getDate());
+    var hour = change(d.getHours());
+    var minute = change(d.getMinutes());
+    var second = change(d.getSeconds());
+    function change(t) {
+        if (t < 10) {
+            return "0" + t;
+        } else {
+            return t;
+        }
+    }
+    return year + month + day +hour + minute +second;
+}
 export {
-    set16code,
-    get16code,
     getConfigId,
     getUrlName,
     queryMenutree,
-    compare
+    compare,
+    isURL,
+    time
 }

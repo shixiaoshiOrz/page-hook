@@ -1,48 +1,77 @@
 <template>
     <div class="youhou_tools_by_gcshi" >
         <!-- 标准产品信息梳理 -->
-        <div class="youhou_info" v-drag @click="drawer = true">普</div>
+        <div class="youhou_info" v-drag @click="drawer = true"> {{ version }}</div>
         <el-drawer :visible.sync="drawer" :with-header="false" :size="size + '%'" class="youhou_drawer">
             <drawerWrap 
                 @deletedUrl='deletedUrl' 
                 @menuId='changePanelSize' 
                 v-if="drawer"
+                :version="version"
                 :isHighVersion="isHighVersion"
             ></drawerWrap>
         </el-drawer>
         <!-- 接口信息 -->
-        <div class="youhou_hook" @click="ajaxDrawer = true"  v-drag>请求信息</div>
+        <div class="youhou_hook" @click="ajaxDrawerVisible"  v-drag>请求信息</div>
         <debugDrawer 
             :ajaxHookArray='ajaxHookArray' 
             v-if="ajaxDrawer"
             @clearList="ajaxHookArray = []"
             @close="ajaxDrawer = false"
         ></debugDrawer>
+
+        <el-dialog
+            title="跳转提示"
+            :visible.sync="dialogVisible"
+            width="30%">
+            <span style="color:red">标准产品3.0+版本不支持在框架页面内使用该功能，但您可以在子页面内使用该功能</span>
+            <span>点击【确定】将跳转至：</span>
+            <p style="margin-top:10px"> <a :href="iframeSrc" target="_blank"> {{iframeSrc}}</a></p>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="dialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="jump()">确 定</el-button>
+            </span>
+        </el-dialog>
     </div>
 </template>
 
 <script>
-import { GM_getObject } from './utils/GM_tools'
+import gmInfo from "./api/GM_DB_INFO"
 import { ajaxHook } from './utils/ajaxHook.js'
 import drawerWrap from './components/standardInfo/drawerWrap.vue'
 import debugDrawer from './components/debugTool/debugDrawer.vue'
 import log from './plugins/log.js'
 import createDom  from "./utils/dom.js"
+import excludeList from "./api/excludeUrl"
 export default {
     data(){
         return {
             drawer: false,  //标准产品信息
-            size:50,        //信息面板大小
-
+            size:50,        //信息面板大
             optionName:"页面刷新加载",//hookinfo触发的dom文本信息
-            
             deletedFulUrl:"",
             ajaxHookArray:[],       //ajaxHook暂存信息
-            
             ajaxDrawer:false,        //请求信息面板
             //是否4.3及以上版本。通过是否存在ajax-hook判断
             isHighVersion:false,
-            version:"普"
+            dialogVisible:false,
+            iframeSrc:""
+        }
+    },
+    computed:{
+        version(){
+            let loginInfoItem  =  gmInfo.getLoginInfoItem()
+            if(loginInfoItem) {
+                return loginInfoItem.version
+            }
+            let thressVersionDom = document.querySelector(".v6s-login-con")
+            if( thressVersionDom ) return "3.0+"
+            if(this.isHighVersion) return "4.3+"
+            if(location.pathname.indexOf("saasweb") > -1) return "4.0+"
+            if(location.pathname.indexOf("saasFrame") > -1) return "3.0+"
+            if(location.pathname.indexOf("login/fbms") > -1) return "4.0+"
+            if(location.pathname.indexOf("fbms") > -1) return "3.0+"
+            return "^_^"
         }
     },
     components:{ drawerWrap ,debugDrawer},
@@ -67,13 +96,13 @@ export default {
             //当页面进行切换。路由改变时会触发popstate事件
             window.addEventListener('popstate',this.popstate)
             //工具名称打印
-            log.pretty(`[persagy-tools] v1.2.0`, `欢迎使用标准产品辅助工具，目前兼容到4.2版本！有疑问请联系开发者shiguangchao@persagy.com`, '#ee0067')
+            log.pretty(`标准产品辅助工具`, `http://www.shixiaoshi.site/persagy/`, '#ee0067')
             //DOM加载后，初始化界面大小
             this.initPanelSize()
         },
         //初始化信息面板大小
         initPanelSize(){
-            const menuList = GM_getObject('MENULIST') || null
+            const menuList = gmInfo.getMenuList()
             if(menuList && menuList[0].id) {
             let id = menuList[0].id
             this.changePanelSize(id)
@@ -93,7 +122,7 @@ export default {
                 ajaxHook(this)
             }
             //创建工具按钮
-            createDom(this.isHighVersion,this.deletedFulUrl)
+            createDom(this.version,this.deletedFulUrl)
             //子应用注入ajaxHook
             let iframe = document.querySelector('iframe')
             if(iframe){
@@ -103,6 +132,10 @@ export default {
                     this.optionName = `点击【${e.target?.innerText || "--"}】`   
                 },true)
             }
+        },
+        jump(){
+            this.dialogVisible = false
+            window.open(this.iframeSrc)
         },
         popstate(){
             //路由切换时，iframe会发生变化，给新的iframe绑定ajaxhook
@@ -128,6 +161,23 @@ export default {
         deletedUrl(url){
             this.deletedFulUrl = url
         },
+        ajaxDrawerVisible(){
+             if(this.version === "3.0+"){
+                let iframe = document.getElementById("iframeSystem")
+                this.iframeSrc = iframe?.src || null
+                if(this.iframeSrc){
+                    this.dialogVisible = true
+                }else{
+                     this.$message.warning('卧槽，居然不支持该页面！')
+                }
+                return
+             }
+             if(excludeList.some(res => res.indexOf(location.host) > -1 )) {
+                this.$message.warning('卧槽，居然不支持该页面！')
+             }else{
+                this.ajaxDrawer = true
+             }
+        }
     },
     watch:{
         //给每一个hookinfo绑定一个触发的说明
@@ -136,7 +186,7 @@ export default {
                 if(v.length == 0) return
                 v[v.length - 1].name = this.optionName
             },deep:true
-        }
+        },
     },
 }
 </script>

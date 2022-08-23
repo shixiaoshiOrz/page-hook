@@ -1,6 +1,6 @@
 <template>
   <div class="youhou_tool-wrap">
-   
+    <!-- 可用登录名列表弹框 -->
     <div class="youhou_login_table-box" v-if='showTable'  v-drag>
         <p class="youhou_login_table-box-header" style="cursor:move">
             <span>可用登录名列表</span>
@@ -8,14 +8,17 @@
         </p>
         <loginNameTable> </loginNameTable> 
     </div>
-
-
+    <!-- 智能获取弹框 -->
+    <div class="youhou-progress" v-if="queryBoxVisible">
+        {{ queryBoxTip }}
+    </div>
+    <!-- 按钮面板 -->
     <div class="tool" title="开启后密码将以明文的形式显示">
         <span>显示密码：</span>
         <el-switch v-model="showPassword" active-color="#13ce66" inactive-color="#F56C6C" @change="showPasswordValueChange()"></el-switch>
     </div>
-    <div class="tool" v-show="!isHighVersion">
-        <span class="youhou_login" title="点击查询可用登录名" @click="queryInfo()">免密登录</span>
+    <div class="tool" v-show="version !== '4.3+'">
+        <span class="youhou_login" title="点击查询可用登录名" @click="queryInfo()">{{ version ==="3.0+" ? "账号获取" : "免密登"}}</span>
         <el-switch 
             v-model="noPasswordValue" 
             active-color="#13ce66" 
@@ -28,17 +31,16 @@
         <span  title="点击查询可用登录名" >智能填充</span>
         <el-switch v-model="infoValue" active-color="#13ce66" inactive-color="#F56C6C" @change="smartFill()"></el-switch>
     </div>
-    <div class="youhou-progress" v-if="queryBoxVisible">
-        智能获取中，请稍后.....
-    </div>
+
   </div>
 </template>
 
 <script>
 import loginNameTable from './loginNameTbale.vue'
-import mixins from '../../utils/mixins'
-import { GM_setObject,GM_getObject } from '../../utils/GM_tools'
+import { GM_setObject,GM_getObject } from '../../utils/GM_API'
 import { passwordInput ,usernameInput} from "../../utils/dom.js"
+import {getUserByIdServiceV2 ,getPersonByUserNameService ,listUsersService} from "../../api/proxy"
+import gmInfo from "../../api/GM_DB_INFO"
 export default {
     components:{ loginNameTable },
     data() {
@@ -49,31 +51,36 @@ export default {
             showTable:false,//登录名查询弹框,
             queryBoxVisible:false,
             itemInfo:null,
+            queryBoxTip:"智能获取中，请稍后.....",
+            groupCode:"",
         }
     },
     props:{
-        isHighVersion:Boolean
+        version:String
     },
-    mixins: [mixins],
     mounted(){
+        //3.0产品不支持免密登录
+        if(this.version === "3.0+"){
+            this.noPasswordValue = null
+            GM_setObject('NOPASSWORDLOGIN',null) 
+        }
         this.$EventBus.$on('deletUrl',()=>{
             this.$nextTick(() => {
-                let userName = document.querySelector(".el-input--suffix input[name=username]")
-                let password = document.querySelector(".el-input--suffix input[placeholder=密码]")
+                let userName = usernameInput
+                let password = passwordInput
                 userName.value = ""
                 password.value = ""
                 this.infoValue = false
                 GM_setObject('INFOVALUE',null)
             })
-            
         })
         //信息填充 - 初始化
-        let LoginInfoArray = GM_getObject('LOGININFOARRAY') || []
-        if(LoginInfoArray.length < 1) {
+        let itemInfo = gmInfo.getLoginInfoItem()
+        if(!itemInfo) {
             GM_setObject('INFOVALUE',null) 
             this.infoValue = false
         }else{
-            this.itemInfo =  LoginInfoArray.find(res => res.fullUrl == location.href)
+            this.itemInfo =  itemInfo
         }
         if(GM_getObject('INFOVALUE')){
             if(this.itemInfo) this.atuoPassword()
@@ -82,11 +89,11 @@ export default {
                 this.infoValue = false
             }    
         } 
-        //初始化页面 - 密码明文
+        //显示密码初始化
         if(this.showPassword) { passwordInput.type = 'text' }
         //免密登录初始化
         if(this.noPasswordValue && location.pathname.indexOf("/login/fbms") > -1){
-            this.setInputValue(usernameInput,'PERSAGYADMIN')
+            this.$setInputValue(usernameInput,'PERSAGYADMIN')
         }
     },
     methods:{
@@ -107,13 +114,17 @@ export default {
         },
         //2.【免密登录】
         noPassWordChange(){
+             if(this.version === "3.0+" ){
+                this.noPasswordValue = false
+                confirm("我嘞个擦，3.0+的标准产品居然不支持此功能！但是，你可以点击【账号获取】！！")
+             }
              if(!usernameInput){
                 this.$message.warning('当前页面不支持该功能！')
                 GM_setObject('NOPASSWORDLOGIN',false)
                 return this.noPasswordValue = false
              }else{
                 if (location.pathname.indexOf("/login/fbms") > -1){
-                    this.setInputValue(usernameInput,'PERSAGYADMIN')
+                    this.$setInputValue(usernameInput,'PERSAGYADMIN')
                 }
                 GM_setObject('NOPASSWORDLOGIN',this.noPasswordValue)
              }
@@ -127,62 +138,74 @@ export default {
             }
             //运维平台----特殊处理
             if(location.pathname.indexOf("/login/fbms") > -1){
-                this.setInputValue(usernameInput,'PERSAGYADMIN')
+                this.$setInputValue(usernameInput,'PERSAGYADMIN')
                 this.infoValue = false
-                return alert('暂不支持密码填充，请使用免密登录功能！')
+                return confirm('运维平台不支持密码填充，请使用免密登录功能！')
             }
             if(this.infoValue){
-                GM_setObject('INFOVALUE',true)
                 //标准产品信息库账号密码匹配
                 let data = this.atuoPassword()
-
-                //如果信息库无储存的账号密码，则智能获取
-                if(!data){
-                    this.queryBoxVisible = true
-                    //获取超管pd信息
-                    const parmas = {loginName: "PERSAGYADMIN",loginDevice: "PC",isAdminLogin: true}
-                    try{
-                        let data = await this.getUserInfoByName(parmas)
-                        let pd =data?.content?.[0].pd || ''
-                        const params1 = {
-                            user_id: "PERSAGYADMIN",isAdmin: "9",page: 1,pageSize: 1000,
-                            pd: data?.content?.[0].pd || '',
-                            puser: {
-                                userId: "PERSAGYADMIN",loginDevice: "PC",
-                                pd: pd
-                            },   
-                        }
-                        //根据获取的pd获取用户列表
-                        let result = await this.getNameList(params1)
-                        let userInfoListTemp = result?.content?.[0]?.content || []
-                        //过滤掉未启用权限或者停用的账号
-                        let userInfoList = userInfoListTemp.filter(res => res.state === '1' && res.authorizations.length > 0)
-                        this.setInputValue(usernameInput,userInfoList[0].userName)
-                        const params2 = {puser: { userId: "PERSAGYADMIN",loginDevice: "PC",pd: pd},userId: userInfoList[0].userId}
-                        let passwordResult = await this.getPasswordByName(params2)
-                        this.setInputValue(passwordInput,  passwordResult.content[0].password)
-                        this.queryBoxVisible = false
-                    }catch(err){
-                        this.queryBoxVisible = false
-                        GM_setObject('INFOVALUE',null)
-                        alert('获取数据异常，请联系管理员！')
-                    }
+                if(data){
+                   return GM_setObject('INFOVALUE',true)
                 }
+                // 对于4.3版本，无法智能获取，直接提示用户
+                if(this.version === "4.3+"){
+                    this.infoValue = false
+                    GM_setObject('INFOVALUE',null)
+                    return this.$message.warning('未获取到信息，请成功登录一次后使用~')
+                }
+                //如果信息库无储存的账号密码，则智能获取
+                this.queryBoxVisible = true
+                //获取pd信息
+                const parmas = {loginName: "PERSAGYADMIN",loginDevice: "PC",isAdminLogin: true}
+                try{
+                    let data = await getPersonByUserNameService(parmas)
+                    let pd = data?.content?.[0].pd ?? ''
+                    this.groupCode = data?.content?.[0].groupCode ?? ''
+                    const params1 = {
+                        user_id: "PERSAGYADMIN",isAdmin: "9",page: 1,pageSize: 1000,
+                        pd: data?.content?.[0].pd || '',
+                        groupCode:this.groupCode,
+                        puser: {
+                            userId: "PERSAGYADMIN",loginDevice: "PC",
+                            pd: pd
+                        },   
+                    }
+                    this.queryBoxTip = "用户名称获取中..."
+                    //根据获取的pd获取用户列表
+                    let result = await listUsersService(params1)
+                    let userInfoListTemp = result?.content?.[0]?.content || []
+                    //过滤掉未启用权限或者停用的账号
+                    let userInfoList = userInfoListTemp.filter(res => res.state === '1' && res.authorizations.length > 0)
+                    this.$setInputValue(usernameInput,userInfoList[0].userName)
+                    const params2 = {puser: { userId: "PERSAGYADMIN",loginDevice: "PC",pd: pd},userId: userInfoList[0].userId,groupCode:this.groupCode,}
+                    this.queryBoxTip = "登录密码获取中..."
+                    let passwordResult = await getUserByIdServiceV2(params2)
+                    this.$setInputValue(passwordInput,  passwordResult.content[0].password)
+                    this.queryBoxVisible = false
+                }catch(err){
+                    this.queryBoxTip = ""
+                    this.infoValue = false
+                    this.queryBoxVisible = false
+                    GM_setObject('INFOVALUE',null)
+                    alert('卧槽，这环境有毒，居然获取失败了！！')
+                }
+                
             }else{
-                this.setInputValue(usernameInput,'')
-                this.setInputValue(passwordInput,'')
+                this.$setInputValue(usernameInput,'')
+                this.$setInputValue(passwordInput,'')
                 GM_setObject('INFOVALUE',null)
             }
         },
         //密码自动填充
         atuoPassword(){
             if(!this.itemInfo) return false
-            this.setInputValue(usernameInput,this.itemInfo.userName)
+            this.$setInputValue(usernameInput,this.itemInfo.userName)
             if(!this.itemInfo.password) return false
-            this.setInputValue(passwordInput,this.itemInfo.password)
+            this.$setInputValue(passwordInput,this.itemInfo.password)
             return true 
         },
-        //4.【信息查询】
+        //4.【免密登录用户民表格】
         queryInfo(){
             if(location.pathname.indexOf('login/fbms') > -1){
                 alert('运维平台通用管理员账号："PERSAGYADMIN"')

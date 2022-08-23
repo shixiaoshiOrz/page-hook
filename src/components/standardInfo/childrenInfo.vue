@@ -1,6 +1,6 @@
 <template>
   <div class="youhou_children-info">
-    <div class="youhou-children-serach" v-show="!isAdmin">
+    <div class="youhou-children-serach" v-show="!isAdmin && version!='3.0+'">
         <el-input placeholder="请输入搜索内容" v-model="serach" size="small" :clearable='true'></el-input>
         <el-button type="primary" size="small" style="margin-left:10px" @click="serachItem()">搜索</el-button>
         <el-button type="danger" size="small" @click="clear()"  style="margin-right:10px">清空</el-button>
@@ -16,7 +16,7 @@
                 <b style="font-weight:800;color:rgb(245 108 108);diplay:block">{{ item.productName}}</b> {{ item.secondName }}
             </span>
             <span style="padding:0" :title="item.authorizationName">{{ item.authorizationName }}</span>
-            <span :title="item.functionUrl + item.authorizationId">{{ item.functionUrl}}{{ item.authorizationId}}</span>
+            <span :title="item.functionUrl">{{ item.functionUrl}}</span>
             <span @click="jump(item)">跳转</span>
         </div>
     </template>
@@ -30,9 +30,18 @@
         </div>
     </template>
 
+    <template v-if="version==='3.0+'" && appArray.length > 
+        <div class="youhou-children-item" v-for="(item,index) in appArray" :key="index">
+            <span :title="item.productName">{{item.productName}}平台 </span>
+            <span :title="item.authorizationName" style="width: 110px;">{{ item.authorizationName }}</span>
+            <span :title="item.functionUrl + item.authorizationId">{{ item.functionUrl}}{{ item.authorizationId}}</span>
+            <span @click="jump(item)">跳转</span>
+        </div>
+    </template>
+
     <el-empty description="没有搜索到任何内容" v-if='serachArray.length == 0 && serachInfoVisible'></el-empty>
     
-    <el-collapse v-show="!serachInfoVisible && !isAdmin && appArray.length > 0">
+    <el-collapse v-show="!serachInfoVisible && !isAdmin && appArray.length > 0 && version!=='3.0+'">
         <el-collapse-item :name="index" v-for="(item,index) in appArray" :key="index">
             <template slot="title">
               <span class="youhou-first-menu" :title="item.productName">{{item.productName}}</span><span class="youhou-first-menu-name">一级菜单</span>
@@ -54,11 +63,14 @@
 </template>
 
 <script>
-import { GM_ajax } from '../../utils/GM_tools'
-import mixins from '../../utils/mixins.js'
-import { GM_setObject,GM_getObject } from '../../utils/GM_tools'
-import { queryMenutree,compare } from '../../utils/common.js'
+import { GM_ajax } from '../../utils/GM_API'
+import { queryMenutree,compare ,time} from '../../utils/common.js'
+import { queryALLInfo } from "../../api/proxy"
+import gmInfo from "../../api/GM_DB_INFO"
 export default {
+    props:{
+        version:String
+    },
     data(){
         return{
             json_fields:{
@@ -95,62 +107,63 @@ export default {
             }
         }
     },
-    mixins:[mixins],
     created(){
         //获取qiankun子组件
         this.queryQiankunInfo()
-        let standardUrlList = GM_getObject('LOGININFOARRAY') || []
-        if(standardUrlList.length > 0) {
-            var itemInfo = standardUrlList.find(res => res.fullUrl.indexOf(location.host) > 1)
-            this.title = itemInfo.title
-        }
-        
+        let itemInfo = gmInfo.getLoginInfoItem()
+        if(itemInfo) this.title = itemInfo.title
     },
     computed:{
         time(){
-            var d = new Date();
-            var year = d.getFullYear();
-            var month = change(d.getMonth() + 1);
-            var day = change(d.getDate());
-            var hour = change(d.getHours());
-            var minute = change(d.getMinutes());
-            var second = change(d.getSeconds());
-            function change(t) {
-                if (t < 10) {
-                    return "0" + t;
-                } else {
-                    return t;
-                }
-            }
-            return year + month + day +hour + minute +second;
+            return time()
         },
     },
     mounted(){
           //根据是否运维平台查询子应用信息
-          if(window.frameElement){
-            let span = window.top.document.querySelector(".header_nav_right span");
-            if(span && span.innerText == 'PERSAGYADMIN'){
-                //获取子应用信息
+          //运维平台的判断方式现在
+          if(location.href.indexOf("maintenancesystem") > -1){
                 this.queryAppInfo('PERSAGYADMIN')
                 this.isAdmin = true
-            }else{
-                this.queryAppInfo()
-            }
+                return
+          }
+          if(this.version == "3.0+"){
+            this.queryAppInfo(null,this.version)
           }else{
             this.queryAppInfo()
           }
+          
+        //   if(window.frameElement){
+        //     let span = window.top.document.querySelector(".header_nav_right span");
+        //     if(span && span.innerText == 'PERSAGYADMIN'){
+        //         //获取子应用信息
+        //         this.queryAppInfo('PERSAGYADMIN')
+        //         this.isAdmin = true
+        //     }else{
+        //         this.queryAppInfo()
+        //     }
+        //   }else{
+        //     this.queryAppInfo()
+        //   }
     },
     methods:{
         async queryQiankunInfo(){
+            if(this.version === "3.0+"){
+                return this.microAppIds = []
+            }
             let qiankunStr = await GM_ajax({method:'GET',url:'/saasweb/static/system.js'})
             eval(qiankunStr)
             try{
                 this.microAppIds = systemConfig?.microAppIds || []
             }catch(err){} 
         },
-        async queryAppInfo(type){
-            let data = await this.queryALLInfo(type)
-            if(data){
+        async queryAppInfo(type,version){
+            let data = await queryALLInfo(type,version)
+            if(data && this.version == "3.0+"){
+                this.appArray = data.content[0].authorizations
+                this.userInfo.name = data.content[0].userName
+                this.userInfo.project_id = data.content[0].projects[0].projectId
+            }
+            if(data && this.version !== "3.0+"){
                 this.userInfo.name = data.content[0].userName
                 if(this.isAdmin){
                     let array = data?.content?.[0]?.authorizations || []

@@ -11,21 +11,41 @@ export default {
             pathname:location.pathname
         }
     },
+    props:{
+        version:String
+    },
     computed:{
         title(){
-            if(this.pathname.indexOf("/login/fbms") > -1){
-                return '点击切换至能源平台'
+            if(this.version === "3.0+"){
+                if(this.pathname.indexOf("saasFrame") > -1){
+                    return '点击切换至运维平台' 
+                }else{
+                    return '点击切换至业务系统平台'
+                }
             }else{
-                return '点击切换至运维平台' 
+                if(this.pathname.indexOf("/login/fbms") > -1){
+                    return '点击切换至数智化管理平台'
+                }else{
+                    return '点击切换至运维平台' 
+                }
             }
+
         }
     },
     methods:{
         jump(){
-            if(this.pathname.indexOf("/login/fbms") > -1){
-                location.pathname = '/saasweb/login'
+            if(this.version === "3.0+"){
+                if(this.pathname.indexOf("saasFrame") > -1){
+                    location.pathname = '/fbms' 
+                }else{
+                    location.pathname = 'saasFrame'
+                }
             }else{
-                location.pathname = '/login/fbms'
+                if(this.pathname.indexOf("/login/fbms") > -1){
+                    location.pathname = '/saasweb/login'
+                }else{
+                    location.pathname = '/login/fbms'
+                }
             }
         }
     }

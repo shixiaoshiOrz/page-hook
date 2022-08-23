@@ -1,5 +1,5 @@
 import { getConfigId } from './common.js'
-import { GM_setObject,GM_getObject ,GM_ajax} from './GM_tools';
+import { GM_setObject,GM_getObject ,GM_ajax} from './GM_API';
 //请求信息储存
 function ajaxIntercept(config,that){
     config.id = getConfigId(config)

@@ -1,39 +1,40 @@
 import Vue from 'vue';
 import toolWrap from '../components/toolbtn/toolBtnWrap.vue'
 import switchWrap from '../components/toolbtn/switch.vue'
-import { setUrlItem } from './GM_Data.js'
+import { setUrlItem } from './login.js'
+import {GM_getObject } from "./GM_API"
+import gmInfo from "../api/GM_DB_INFO"
 
 // 登录框 ，输入框DOM ，用户名Dom ，登录按钮 ，标题
 let loginBox = null, passwordInput = null ,usernameInput = null ,loginBtn = null ,title = null
 
-function createDom (isHighVersion,deletedFulUrl) {
-    if(document.querySelector(".login_forms")){
+function createDom (version,deletedFulUrl) {
+    let thressVersionDom = document.querySelector(".v6s-login-con")
+    if(version === "3.0+" || thressVersionDom){
+        loginBox = document.getElementById("formLogin")
+        passwordInput = document.querySelector(".login-con input[id=txtPass]")
+        usernameInput = document.querySelector(".login-con input[id=txtName]") 
+        loginBtn = document.getElementById("btnLogin")
+        title = document.querySelector(".sysytem-title")?.innerText 
+    }else{
         loginBox = document.querySelector(".login_forms")
-    }
-    if(document.querySelector(".el-input--suffix input[placeholder=密码]")){
         passwordInput = document.querySelector(".el-input--suffix input[placeholder=密码]")
-    }
-    if(document.querySelector(".el-input--suffix input[name=username]")){
         usernameInput = document.querySelector(".el-input--suffix input[name=username]") 
-    }
-    if(document.querySelector(".login_btn")){
         loginBtn = document.querySelector(".login_btn")
-    }
-    if(document.querySelector(".login_title")){
-        title = document.querySelector(".login_title")?.innerText    
+        title = document.querySelector(".login_title")?.innerText   
     }
     //增加工具栏
-    let toolPropsData = { isHighVersion:isHighVersion }
+    let toolPropsData = { version:version }
     domMount(loginBox,'youhou_toolWrap',toolWrap,toolPropsData)
     //增加平台切换按钮
-    let swicthPropsData = { deletedFulUrl:deletedFulUrl }
+    let swicthPropsData = { deletedFulUrl:deletedFulUrl ,version:version}
     domMount(loginBox,'youhou_swicth',switchWrap,swicthPropsData)
     //监听登录按钮点击事件
     if(loginBtn){
         loginBtn.addEventListener("click",()=>{
             const item = {
                 host:location.host,              //网站host信息
-                version:"",                          //网页版本
+                version:version,                          //网页版本
                 fullUrl:location.href,               //登录的网址
                 userName:usernameInput.value,        //登录用户名
                 title:title || '--',                 //标准产品名称
@@ -47,6 +48,9 @@ function createDom (isHighVersion,deletedFulUrl) {
                 ]
             }
             //获取的信息先存放在中转站中
+            if(version == "3.0+"){
+                gmInfo.setTempItem(item)
+            }
             setUrlItem(item);
         });
     }

@@ -86,13 +86,14 @@
 
 <script>
 import ajaxHookSetting from '../debugTool/ajaxHookSetting.vue'
-import { GM_setObject,GM_getObject } from '../../utils/GM_tools'
+import { GM_setObject,GM_getObject } from '../../utils/GM_API'
+import gmInfo from "../../api/GM_DB_INFO"
 export default {
     props:{
         ajaxHookArrayIfo:[]
     },
     mounted(){
-        this.hookList = GM_getObject('HOOKINFOLIST') || []
+        this.hookList = gmInfo.getHookList()
     },
     components:{ ajaxHookSetting },
     data() {
@@ -158,13 +159,13 @@ export default {
     },
     methods:{
         deletAll(){
-            GM_setObject('HOOKINFOLIST',null)
+            gmInfo.setHookList(null)
             this.hookList = []
             this.dialogTableVisible = false
             this.$message.success(`删除成功！`)
         },
         closePop(v){
-            this.hookList = GM_getObject('HOOKINFOLIST') || []
+            this.hookList = gmInfo.getHookList()
             this.ajaxHookSettingVisible = false
         },
         showTable(){
@@ -177,7 +178,7 @@ export default {
         deletHookItem(index){
             this.hookList.splice(index,1)
             this.$message.success(`删除成功！`)
-            GM_setObject('HOOKINFOLIST',this.hookList)
+            gmInfo.setHookList(this.hookList)
         },
         isHookItem(item){
             //增加拦截信息

@@ -19,7 +19,7 @@
   </div>
 </template>
 <script>
-import { GM_setObject,GM_getObject } from '../../utils/GM_tools'
+import gmInfo from "../../api/GM_DB_INFO"
 export default {
   data() {
     return {
@@ -36,7 +36,7 @@ export default {
     };
   },
   mounted(){
-    const menuList = GM_getObject('MENULIST') || null
+    const menuList = gmInfo.getMenuList()
     if(menuList && menuList[0].id) {
       this.list = menuList
     }
@@ -60,7 +60,7 @@ export default {
         console.log('this.list: ', this.list);
         this.dragIndex = index;
         this.selectIndex = index
-        GM_setObject('MENULIST',this.list)
+        gmInfo.setMenuList(this.list)
       }
     },
     dragover(e, index) {

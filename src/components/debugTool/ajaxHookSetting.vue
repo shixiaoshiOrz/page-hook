@@ -84,8 +84,8 @@
 </template>
 
 <script>
-import { GM_setObject,GM_getObject } from '../../utils/GM_tools'
 import JsonViewer from 'vue-json-viewer'
+import gmInfo from "../../api/GM_DB_INFO"
 export default {
  data(){
     return {
@@ -120,10 +120,10 @@ export default {
     },
     clearHook(){
         if(this.noHook) return
-        let hookInfoList = GM_getObject('HOOKINFOLIST')
+        let hookInfoList = gmInfo.getHookList()
         let index = hookInfoList.findIndex(res => res.id == this.seletItem.id)
         hookInfoList.splice(index,1)
-        GM_setObject('HOOKINFOLIST',hookInfoList)
+        gmInfo.setHookList(hookInfoList)
         this.$message.success(`删除成功！`)
         this.$emit('close')
     },
@@ -134,7 +134,7 @@ export default {
         if (this.responseHook && this.response == this.responseCustom) return this.$message.error(`未设置自定义响应数据！`)
         if (!this.isJSON(this.bodyCustom)) return this.$message.error(`请求体json格式错误`)
         if (!this.isJSON(this.responseCustom)) return this.$message.error(`响应体json格式错误`)
-        let hookInfoList = GM_getObject('HOOKINFOLIST') || []
+        let hookInfoList = gmInfo.getHookList()
         let id = this.seletItem.id
         let hookItem = {
             id:this.seletItem.id,
@@ -155,7 +155,7 @@ export default {
             hookInfoList.push(hookItem)
             
         }
-        GM_setObject('HOOKINFOLIST',hookInfoList)
+        gmInfo.setHookList(hookInfoList)
         this.$message.success(`保存成功！`)
         this.$emit('close')
     },
@@ -178,7 +178,7 @@ export default {
         }
     },
     clear(){
-        GM_setObject('HOOKINFOLIST',null) 
+        gmInfo.setHookList(null)
     }
  },
  watch:{
@@ -188,7 +188,7 @@ export default {
             if(!v.body) v.body = "{}"
             this.body = JSON.stringify( JSON.parse(v.body),null,2)   
             this.response = JSON.stringify(JSON.parse(v.response),null,2)  
-            let hookInfoList = GM_getObject('HOOKINFOLIST') || []
+            let hookInfoList = gmInfo.getHookList()
             if( hookInfoList.length == 0) {
                 this.bodyCustom = JSON.stringify( JSON.parse(v.body),null,2) 
                 this.responseCustom = JSON.stringify(JSON.parse(v.response),null,2)

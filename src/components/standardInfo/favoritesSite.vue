@@ -32,7 +32,7 @@
 </template>
 
 <script>
-import { GM_setObject,GM_getObject } from '../../utils/GM_tools'
+import gmInfo from "../../api/GM_DB_INFO"
 export default {
     data(){
         return {
@@ -45,7 +45,7 @@ export default {
         }
     },
     created(){
-        this.array = GM_getObject('URLLISTARRAY') || []
+        this.array = gmInfo.getUrlList()
     },
     methods:{
         jump(url){
@@ -81,13 +81,13 @@ export default {
         //新增
         addItem(){
             if(!this.name) return this.$message.warning('请输入名称！')
-            let urlListArray = GM_getObject('URLLISTARRAY') || []
+            let urlListArray = gmInfo.getUrlList()
             urlListArray.push({
                 name:this.name,
                 url:this.url,
                 id:urlListArray.length == 0 ? 0 : urlListArray[urlListArray.length - 1].id + 1
             })
-            GM_setObject('URLLISTARRAY',urlListArray)
+            gmInfo.setUrlList(urlListArray)
             this.array = urlListArray
             this.closeAddPop()
         },
@@ -100,14 +100,14 @@ export default {
                 this.editStauts = false
                 this.selectIndex = -1
                 this.closeAddPop()
-                GM_setObject('URLLISTARRAY',this.array)
+                gmInfo.setUrlList(this.array)
             }else{
                 this.$confirm('是否确认删除?', '提示', { confirmButtonText: '确定',cancelButtonText: '取消',type: 'warning'})
                 .then(() => {
                     //删除选中结果
                     let index = this.array.findIndex(res => res.id == item.id)
                     this.array.splice(index,1)
-                    GM_setObject('URLLISTARRAY',this.array)
+                    gmInfo.setUrlList(this.array)
                 }).catch(() => {
                     
                 });

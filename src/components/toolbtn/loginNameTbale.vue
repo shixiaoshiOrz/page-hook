@@ -1,9 +1,9 @@
 <template>
   <div class="youhou_login-table-box">
-    <span v-if="wait">获取中，请稍后...</span>
+    <span v-if="waitInfo">{{ waitInfo }}</span>
     <template v-if="userInfoList.length > 0">
         <div v-for="(item,index) in userInfoList" :key="item.userId || index" class="youhou_table-item">
-            <span @click="copy(item.userName)" style="min-width: 100px;margin-right: 5px;">{{ item.userName}}</span>
+            <span @click="$copy(item.userName)" style="min-width: 100px;margin-right: 5px;">{{ item.userName}}</span>
             <span @click="queryPassword(item,index)" 
                  :class="getClass(paaswordValue,index)" 
                  style="min-width: 80px; margin-right: 5px;"> 
@@ -18,9 +18,9 @@
 </template>
 
 <script>
-import mixins from '../../utils/mixins'
+import { getPersonByUserNameService,listUsersService ,getUserByIdServiceV2 } from "../../api/proxy"
+import { passwordInput, usernameInput } from "../../utils/dom"
 export default {
-    mixins: [mixins],
     created(){
         this.getLoginName()
     },
@@ -30,7 +30,8 @@ export default {
             paaswordValue:'暂无密码!',
             paaswordIndex:-1,
             adminPd:'',
-            wait:true,
+            waitInfo:"获取中，请稍后...",
+            groupCode:""
         }
     },
     methods:{
@@ -47,50 +48,57 @@ export default {
         },
         //获取用户名称列表
         async getLoginName(){
-           const parmas = {loginName: "PERSAGYADMIN",loginDevice: "PC",isAdminLogin: true}
-           let data = await this.getUserInfoByName(parmas)
-           if(!data) return
-           this.adminPd = data?.content?.[0].pd || ''
-           const parmas1 = {
+           //根据运维账号获取pd信息
+           const params = {loginName: "PERSAGYADMIN",loginDevice: "PC",isAdminLogin: true}
+           let data = await getPersonByUserNameService(params)
+           if(!data) return this.waitInfo = "卧槽，这环境有毒，居然获取失败了！"
+           this.waitInfo = "数据连接通道已建立..."
+           this.adminPd = data?.content?.[0].pd ?? ''
+           this.groupCode = data?.content?.[0].groupCode || ""
+           const params1 = {
                 user_id: "PERSAGYADMIN",isAdmin: "9",page: 1,pageSize: 1000,
-                pd: data?.content?.[0].pd || '',
+                pd: data?.content?.[0].pd ?? '',
+                groupCode: this.groupCode,
                 puser: {
                     userId: "PERSAGYADMIN",loginDevice: "PC",
                     pd: this.adminPd
                 },   
             }
-            //根据获取的pd获取用户列表
-            let result = await this.getNameList(parmas1)
-            if(!result) return
-            let userInfoListTemp = result?.content?.[0]?.content || []
-            //过滤未启用的账号   //过滤没有权限的账号
+            //根据pd获取用户列表
+            let result = await listUsersService(params1)
+            if(!result) return this.waitInfo = "卧槽，这环境有毒，居然获取失败了！"
+            this.waitInfo = "数据获取成功..."
+            let userInfoListTemp = result?.content?.[0]?.content ?? []
+            //过滤未启用的账号 ,过滤没有权限的账号
             if(userInfoListTemp.length < 1) return
             this.userInfoList = userInfoListTemp.filter(res => res.state === '1' && res.authorizations.length > 0)
             this.paaswordList = this.userInfoList.map(res => '获取密码')
             //关闭请求等待
-            this.wait = false
+            this.waitInfo = false
         },
         //获取登录密码
         async queryPassword(item,index){
             if(index === this.paaswordIndex){
-                return this.copy(this.paaswordValue)
+                return this.$copy(this.paaswordValue)
             }
             this.paaswordIndex = index
             this.paaswordValue = '获取中...'
-            const parmas1 = {puser: { userId: "PERSAGYADMIN",loginDevice: "PC",pd: this.adminPd},userId: item.userId}
+            const parmas = {puser: { userId: "PERSAGYADMIN",loginDevice: "PC",pd: this.adminPd},userId: item.userId,groupCode: this.groupCode,}
             let passwordResult
             try{
-              passwordResult = await this.getPasswordByName(parmas1)
-            }catch(err){}finally{
-              this.paaswordValue = passwordResult?.content?.[0]?.password || '暂无密码！'
+              passwordResult = await getUserByIdServiceV2(parmas)
+            }catch(err){
+                console.log(err);
+            }finally{
+              this.paaswordValue = passwordResult?.content?.[0]?.password ?? '暂无密码！'
             }   
         },
         //账号密码填充
         autoUserName(item,index){
-            this.setInputValue(this.usernameInput,item.userName)
-            this.setInputValue(this.passwordInput,"")
+            this.$setInputValue(usernameInput,item.userName)
+            this.$setInputValue( passwordInput,"")
             if(index === this.paaswordIndex){
-                this.setInputValue(this.passwordInput,this.paaswordValue)
+                this.$setInputValue(passwordInput,this.paaswordValue)
             }
         }
     }

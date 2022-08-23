@@ -4,8 +4,7 @@ const GM_setObject = function (name, value) {
 		GM_setValue (name, JSON.stringify(value));
 	}else{
         GM_setValue (name,value);
-    }
-    
+    } 
 }
 const GM_getObject = function (name, value) {
 	try {
@@ -32,7 +31,7 @@ const GM_ajax = ({method = "POST",url,data}) => {
         GM_xmlhttpRequest({
             method: method,
             url,
-            data,
+            data:JSON.stringify(data),
             headers: {
                 "Content-Type": "application/json"
             },

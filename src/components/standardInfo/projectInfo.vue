@@ -6,23 +6,20 @@
         <el-button style="float: right; padding: 3px 0" type="text">{{ userInfo ? userInfo.groupCode : '/'}}</el-button>
       </div>
       <div class="youhou-info-text" v-if="userInfo">
-        <span>用户名称：<el-button  type='text' size="normol" @click='copy(userInfo.name)'>{{userInfo.name || "--"}}</el-button></span>
-        <span>用户账号：<el-button type='text' size="normol" @click='copy(userInfo.userName)'>{{ userInfo.userName || "--"}}</el-button></span>
-        <span>用户密码：<el-button type='text' size="normol" @click='copy(userInfo.password)'>{{userInfo.password || "--"}}</el-button></span>
-        <span>用户电话：<el-button type='text' size="normol" @click='copy(userInfo.pphone_num)'>{{userInfo.pphone_num || "--"}}</el-button></span>
-        <span>用户邮箱：<el-button type='text' size="normol" @click='copy(userInfo.person_mail)'>{{userInfo.person_mail || "--"}}</el-button></span>
-        <span>userId：<el-button type='text' size="normol" @click='copy(userInfo.userId)'>{{userInfo.userId || "--"}}</el-button></span>
-        <span>用户pd：<el-button type='text'  size="normol" @click='copy(userInfo.pd)'>{{userInfo.pd || "--"}}</el-button></span>
+        <span>用户名称：<el-button  type='text' size="normol" @click='$copy(userInfo.name)'>{{userInfo.name || "--"}}</el-button></span>
+        <span>用户账号：<el-button type='text' size="normol" @click='$copy(userInfo.userName)'>{{ userInfo.userName || "--"}}</el-button></span>
+        <span>用户密码：<el-button type='text' size="normol" @click='$copy(userInfo.password)'>{{userInfo.password || "--"}}</el-button></span>
+        <span>用户电话：<el-button type='text' size="normol" @click='$copy(userInfo.pphone_num)'>{{userInfo.pphone_num || "--"}}</el-button></span>
+        <span>用户邮箱：<el-button type='text' size="normol" @click='$copy(userInfo.person_mail)'>{{userInfo.person_mail || "--"}}</el-button></span>
+        <span>userId：<el-button type='text' size="normol" @click='$copy(userInfo.userId)'>{{userInfo.userId || "--"}}</el-button></span>
+        <span>用户pd：<el-button type='text'  size="normol" @click='$copy(userInfo.pd)'>{{userInfo.pd || "--"}}</el-button></span>
       </div>
       <el-empty description="系统库无资源，登录该网站后可查看信息！" v-if='!userInfo'></el-empty>
     </el-card>
-
      <el-card class="box-card">
       <div slot="header" class="clearfix">
         <span>项目信息</span>
-        <!-- <el-button style="float: right; padding: 3px 0" type="text"></el-button> -->
       </div>
-
       <template v-if="projectInfo.length > 0">
          <div  v-for="(item,index) in projectInfo" :key="index" class="youhou-text">
           <span style="width:200px;">项目名称：<el-tag>{{item.projName }}</el-tag></span>
@@ -36,18 +33,19 @@
 </template>
 
 <script>
-import { GM_setObject,GM_getObject } from '../../utils/GM_tools'
-import mixins from '../../utils/mixins.js'
+import { queryALLInfo } from "../../api/proxy"
+import gmInfo from "../../api/GM_DB_INFO"
 export default {
-  mixins:[mixins],
   created(){
     this.queryInfo()
+  },
+  props:{
+    version:String
   },
   data(){
     return {
       projectInfo:[],
       userInfo:null,
-
     }
   },
   methods:{
@@ -56,7 +54,7 @@ export default {
       GM_setClipboard(url)
     },
     async queryInfo(){
-        let data = await this.queryALLInfo()
+        let data = await queryALLInfo(null,this.version)
         if(!data) return
         let result = data.content[0]
         this.userInfo = {
@@ -69,10 +67,9 @@ export default {
            userName:result.userName,
            password:'',
         } 
-        let infoArray = GM_getObject('LOGININFOARRAY') || []
-        if( infoArray.length > 0){
-          let item = infoArray.find(res => res.fullUrl.indexOf(location.host) > -1)
-          this.userInfo.password = item.password
+        let itemInfo = gmInfo.getLoginInfoItem()
+        if( itemInfo ){
+          this.userInfo.password = itemInfo.password
         }
         this.projectInfo = result.projects || []
     }

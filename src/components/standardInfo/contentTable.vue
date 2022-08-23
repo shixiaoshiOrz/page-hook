@@ -26,7 +26,7 @@
                         v-if="!editActive || selectIndex !== scope.$index" 
                         class="youhou_text" 
                         :title="scope.row.title"
-                        @click="copy(scope.row.title)"
+                        @click="$copy(scope.row.title)"
                     >{{ scope.row.title }}</span>
                 </template>
             </el-table-column>
@@ -46,14 +46,14 @@
 
                 <template slot-scope="scope">
                     <div v-if="isNameAndPassword(scope.row.notice).length > 1 && selectIndex != scope.$index">
-                        <el-tag @click="copy(isNameAndPassword(scope.row.notice)[0])">{{isNameAndPassword(scope.row.notice)[0]}}</el-tag>
-                        <el-tag type="success" @click="copy(isNameAndPassword(scope.row.notice)[1])">{{isNameAndPassword(scope.row.notice)[1]}}</el-tag>
+                        <el-tag @click="$copy(isNameAndPassword(scope.row.notice)[0])">{{isNameAndPassword(scope.row.notice)[0]}}</el-tag>
+                        <el-tag type="success" @click="$copy(isNameAndPassword(scope.row.notice)[1])">{{isNameAndPassword(scope.row.notice)[1]}}</el-tag>
                     </div>
                     <el-input  v-model="notice" v-if="editActive && selectIndex == scope.$index "></el-input> 
                     <span 
                         v-if="selectIndex !== scope.$index  && isNameAndPassword(scope.row.notice).length < 2 " 
                         class="youhou_text" 
-                        @click="copy(scope.row.title)"
+                        @click="$copy(scope.row.title)"
                         :title="scope.row.notice"
                     >{{ scope.row.notice }}</span>
                 </template>
@@ -75,24 +75,8 @@
 </template>
 
 <script>
- function IsURL(str_url){ 
-         var strRegex = "^((https|http|ftp|rtsp|mms)?://)"  
-         + "?(([0-9a-z_!~*'().&=+$%-]+: )?[0-9a-z_!~*'().&=+$%-]+@)?" //ftp的user@  
-         + "(([0-9]{1,3}\.){3}[0-9]{1,3}" // IP形式的URL- 199.194.52.184  
-         + "|" // 允许IP和DOMAIN（域名） 
-         + "([0-9a-z_!~*'()-]+\.)*" // 域名- www.  
-         + "([0-9a-z][0-9a-z-]{0,61})?[0-9a-z]\." // 二级域名  
-         + "[a-z]{2,6})" // first level domain- .com or .museum  
-         + "(:[0-9]{1,4})?" // 端口- :80  
-         + "((/?)|" // a slash isn't required if there is no file name  
-         + "(/[0-9a-z_!~*'().;?:@&=+$,%#-]+)+/?)$";  
-         var re=new RegExp(strRegex);  
-       if (re.test(str_url)){ 
-            return true  
-        }else{  
-            return false  
-       } 
-    }
+import { isURL, time } from "../../utils/common"
+
 export default {
     data(){
         return {
@@ -118,21 +102,7 @@ export default {
     },
     computed:{
         time(){
-            var d = new Date();
-            var year = d.getFullYear();
-            var month = change(d.getMonth() + 1);
-            var day = change(d.getDate());
-            var hour = change(d.getHours());
-            var minute = change(d.getMinutes());
-            var second = change(d.getSeconds());
-            function change(t) {
-                if (t < 10) {
-                    return "0" + t;
-                } else {
-                    return t;
-                }
-            }
-            return year + month + day +hour + minute +second;
+            return  time()
         },
         excelpage(){
             let newData = [{
@@ -161,13 +131,9 @@ export default {
             return str.split('/')
         },
         jump(url){
-            let isUrl = IsURL(url)
+            let isUrl = isURL(url)
             if(isUrl) window.open(url)
             else this.$message.success('已经复制到剪切板！')
-        },
-        copy(url){
-            this.$message.success('已经复制至剪切板！')
-            GM_setClipboard(url)
         },
         download(){
             if(this.showAddInput){
@@ -243,9 +209,7 @@ export default {
     watch:{
         itemInfo:{
             handler(v){
-                this.tableData = v
-                console.log('this.tableData: ', this.tableData);
-                
+                this.tableData = v   
             },
             deep:true,
             immediate:true

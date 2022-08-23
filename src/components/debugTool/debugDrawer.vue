@@ -16,6 +16,7 @@
             <div class="youhou_debug-result-top"> 
                  <b-code-editor 
                     v-model="body" 
+                    v-if="ajaxItemInfo.headers.indexOf('application/json') > -1"
                     height="100%"
                     :auto-format="true" 
                     theme="idea" 
@@ -78,6 +79,9 @@ export default {
             this.ajaxItemInfo = v
             let response = v?.response || '{}'
             let body = v?.body || '{}'
+            if(v.headers.indexOf('application/json') == -1){
+                    body = '{}'
+                }
             this.response =  JSON.stringify(JSON.parse(response),null,2)        
             this.body =  JSON.stringify(JSON.parse(body),null,2)
         },
@@ -92,6 +96,9 @@ export default {
                 this.ajaxItemInfo = v[0]
                 let response = this.ajaxItemInfo?.response || '{}'
                 let body = this.ajaxItemInfo?.body || '{}'
+                if(v[0]?.headers?.indexOf('application/json') == -1){
+                    body = '{}'
+                }
                 this.response =  JSON.stringify(JSON.parse(response),null,2)        
                 this.body =  JSON.stringify(JSON.parse(body),null,2)
                }catch(err){
