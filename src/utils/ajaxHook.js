@@ -4,6 +4,8 @@ import {ajaxIntercept,responseIntercept,responseHook,bodyHook } from './ajaxInte
 import excludeList from "../api/excludeUrl"
 
 const ajaxHook = (that,win = unsafeWindow) => {
+    //对于非标准产品默认关闭
+    if(!that.hookVisible) return 
     if(excludeList.some(res => res.indexOf(location.host) > -1 )) return 
     return proxy({
         //请求发起前进入

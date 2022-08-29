@@ -215,7 +215,7 @@ export default {
             }else{
                 url = `${res.functionUrl}${res.authorizationId}?loginName=${this.userInfo.name}`
             }
-            window.open(url)
+            this.$jump(url)
         },
         copy(res){
             let url

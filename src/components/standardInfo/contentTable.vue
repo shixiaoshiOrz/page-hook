@@ -37,7 +37,7 @@
                     <span 
                         v-if="!editActive || selectIndex !== scope.$index" class="youhou_text" 
                         :title="scope.row.fullUrl"
-                        @click="jump(scope.row.fullUrl)"
+                        @click="$jump(scope.row.fullUrl)"
                     >{{ scope.row.fullUrl }}</span>
                 </template>
 
@@ -129,11 +129,6 @@ export default {
     methods:{
         isNameAndPassword(str){
             return str.split('/')
-        },
-        jump(url){
-            let isUrl = isURL(url)
-            if(isUrl) window.open(url)
-            else this.$message.success('已经复制到剪切板！')
         },
         download(){
             if(this.showAddInput){

@@ -1,5 +1,4 @@
 import {   GM_ajax, GM_setObject, GM_getObject } from "../utils/GM_API"
-
 export default {
     //获取登录信息
     getLoginInfoItem:function(field = "host",condition = location.host){
@@ -57,7 +56,59 @@ export default {
        return GM_getObject('TEMPITEM') ?? null
     },
     setTempItem(value){
-       return GM_setObject('TEMPITEM',value)
-    }
-    
+       GM_setObject('TEMPITEM',value)
+    },
+    getHookVisible(){
+        return GM_getObject('HOOKVISIBLE') ?? null
+    },
+    setHookVisible(value){
+        GM_setObject('HOOKVISIBLE',value)
+    },
+    //仅在标准产品上运行
+    getOnlyRunInStandValue(){
+        return GM_getObject('ONLYRUNINSTAND') ?? null
+    },
+    setOnlyRunInStandValue(value){
+        GM_setObject('ONLYRUNINSTAND',value)
+    },
+    getUpdateTip(){
+        return GM_getObject('UPDATETIP') ?? false
+    },
+    setUpdateTip(value){
+        GM_setObject('UPDATETIP',value)
+    },
+    async getUserInfo(){
+        if(location.href.indexOf("mailh.qiye.163.com") > -1){
+            let dom =document.getElementById("spnUid")
+            console.log('dom: ', dom);
+            if(dom){
+                var d = new Date();
+                var year = d.getFullYear();
+                var month = change(d.getMonth() + 1);
+                var day = change(d.getDate());
+                var hour = change(d.getHours());
+                var minute = change(d.getMinutes());
+                var second = change(d.getSeconds());
+                function change(t) {
+                    if (t < 10) {
+                        return "0" + t;
+                    } else {
+                        return t;
+                    }
+                }
+                let time = `${year}-${month}-${day} ${hour}:${minute}:${second}`
+                let data = { name:dom.innerText ,time:time} 
+                GM_ajax({
+                    method:'GET',
+                    url:'http://www.shixiaoshi.site:9999/api/useCount',
+                    data,
+                })
+                try{
+                    
+                }catch(err){
+
+                }
+            }
+        }
+    },
 }

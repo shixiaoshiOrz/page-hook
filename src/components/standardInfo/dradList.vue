@@ -21,11 +21,21 @@
 <script>
 import gmInfo from "../../api/GM_DB_INFO"
 export default {
+  props:{
+    initMenu:Boolean
+  },
+  watch:{
+    initMenu(){
+      this.selectIndex = 0
+      const menuList = gmInfo.getMenuList()
+      this.$emit('menuItem',menuList[0])
+    }
+  },
   data() {
     return {
       list: [
         { label: "标准产品相关记录", standard:true, id:1},
-        { label: "用户信息", standard:true, id:2},
+        { label: "运维工具", standard:true, id:2},
         { label: "项目信息", standard:true, id:3},
         { label: "子应用信息", standard:true, id:4},
         { label: "网址收藏", standard:false, id:5},
@@ -57,7 +67,6 @@ export default {
         const moving = this.list[this.dragIndex];
         this.list.splice(this.dragIndex, 1);
         this.list.splice(index, 0, moving);
-        console.log('this.list: ', this.list);
         this.dragIndex = index;
         this.selectIndex = index
         gmInfo.setMenuList(this.list)

@@ -4,7 +4,7 @@
 
       <div class="youhou_menu-card-title">
         <div :title="item.title">{{ item.title || '暂无标题' }}</div>
-        <div style="flex:1"><el-link @click="window.open(item.fullUrl)">{{ item.fullUrl || '暂无网址' }}</el-link></div>
+        <div style="flex:1"><el-link @click="$jump(item.fullUrl)">{{ item.fullUrl || '暂无网址' }}</el-link></div>
         <div>
           <el-button  @click="delet(item)" type="danger" size="mini">删除</el-button>
           <el-button @click="show(index)" size="mini">{{showChild && selectIndex == index ? '收起' : '展开'}}</el-button>

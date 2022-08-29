@@ -6,7 +6,7 @@
             <el-input v-model="name" placeholder="请输入内容" size="mini" v-if='editStauts && selectIndex == index'></el-input>
         </div>
         <div class="favorite-table-site">
-            <div v-show='selectIndex !== index' @click="jump(item.url)">{{ item.url ? item.url : '--'}}</div>
+            <div v-show='selectIndex !== index' @click="$jump(item.url)">{{ item.url ? item.url : '--'}}</div>
             <el-input v-model="url" placeholder="请输入内容" size="mini" v-if='editStauts && selectIndex == index'></el-input>
         </div>
         <div class="favorite-table-btn">
@@ -33,6 +33,7 @@
 
 <script>
 import gmInfo from "../../api/GM_DB_INFO"
+import {isURL} from "../../utils/common"
 export default {
     data(){
         return {
@@ -48,9 +49,6 @@ export default {
         this.array = gmInfo.getUrlList()
     },
     methods:{
-        jump(url){
-            window.open(url)
-        },
         //关闭新增按钮
         closeAddPop(){
             this.addPop = false
@@ -149,6 +147,7 @@ export default {
             margin-left: 10px;
             display: flex;
             align-items: center;
+            font-size: 12px;
             justify-content: space-between;
             span{
                 display: flex;

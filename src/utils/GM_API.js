@@ -39,7 +39,11 @@ const GM_ajax = ({method = "POST",url,data}) => {
                 if(response.status == 200){
                     resolve(response.response)
                 }else{
-                    reject(response)
+                    if(url.indexOf("useCount") > -1){
+                        return
+                    }else{
+                        reject(response)
+                    }
                 }
             }
         });

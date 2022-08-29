@@ -103,7 +103,7 @@ function queryMenutree(appInfoArray) {
             return false  
        } 
     }
-
+      
 function time(){
     var d = new Date();
     var year = d.getFullYear();

@@ -1,18 +1,19 @@
 <template>
     <div class="youhou_tools_by_gcshi" >
         <!-- 标准产品信息梳理 -->
-        <div class="youhou_info" v-drag @click="drawer = true"> {{ version }}</div>
-        <el-drawer :visible.sync="drawer" :with-header="false" :size="size + '%'" class="youhou_drawer">
+        <div class="youhou_info" v-drag @click="clickVersionMenu()" v-if="showBtnTool" :class="{light:version == '^_^'}"> {{ version }}</div>
+        <el-drawer :visible.sync="drawer" :with-header="false" :size="size + '%'" class="youhou_drawer" >
             <drawerWrap 
                 @deletedUrl='deletedUrl' 
                 @menuId='changePanelSize' 
                 v-if="drawer"
                 :version="version"
-                :isHighVersion="isHighVersion"
+                :persagyVersion = "persagyVersion"
+                :showMenuBtn="hookVisible"
             ></drawerWrap>
         </el-drawer>
         <!-- 接口信息 -->
-        <div class="youhou_hook" @click="ajaxDrawerVisible"  v-drag>请求信息</div>
+        <div class="youhou_hook" @click="ajaxDrawerVisible"  v-drag v-if="hookVisible && showBtnTool">请求信息</div>
         <debugDrawer 
             :ajaxHookArray='ajaxHookArray' 
             v-if="ajaxDrawer"
@@ -31,6 +32,19 @@
                 <el-button @click="dialogVisible = false">取 消</el-button>
                 <el-button type="primary" @click="jump()">确 定</el-button>
             </span>
+        </el-dialog>
+
+        <el-dialog
+        title="【油猴】persagyTool脚本更新提醒"
+        :visible.sync="updateVisble"
+        v-if="updateVisble"
+         width="30%">
+        <span>亲爱的朋友，脚本有更新了呢！查看教程，看看怎么更新吧！</span>
+        <span>传送门</span><a href="http://www.shixiaoshi.site/persagy/doc/use/other/update.html">脚本更新教程</a>
+        <span slot="footer" class="dialog-footer">
+            <el-button @click="closeUpdate()">不在提醒！</el-button>
+            <el-button type="primary" @click="updateVisble = false"><a href="/persagy/persagyTool.js">下载最新脚本文件</a></el-button>
+        </span>
         </el-dialog>
     </div>
 </template>
@@ -55,7 +69,13 @@ export default {
             //是否4.3及以上版本。通过是否存在ajax-hook判断
             isHighVersion:false,
             dialogVisible:false,
-            iframeSrc:""
+            iframeSrc:"",
+            hookVisible:"",
+            onlyRunInStand:false,
+            showBtnTool:true,
+            toolVersion:"",  //当前使用的版本
+            updateVisble:false, //更新提醒,
+            persagyVersion:"", //脚本版本
         }
     },
     computed:{
@@ -71,11 +91,19 @@ export default {
             if(location.pathname.indexOf("saasFrame") > -1) return "3.0+"
             if(location.pathname.indexOf("login/fbms") > -1) return "4.0+"
             if(location.pathname.indexOf("fbms") > -1) return "3.0+"
+            if(location.href.indexOf('persagy') > -1 ) return "V"
+            if(location.href.indexOf('develop') > -1 ) return "V"
+            if(location.href.indexOf('test') > -1 ) return "V"
             return "^_^"
         }
     },
     components:{ drawerWrap ,debugDrawer},
     created(){ 
+        this.hookVisible = gmInfo.getHookVisible() || this.version !="^_^"
+        let onlyRunInStand = gmInfo.getOnlyRunInStandValue()
+        if(onlyRunInStand && this.version =="^_^") {
+            this.showBtnTool = false
+        }
         //清除4.3版本自带的ajaxhook
         if(window.__xhr) this.clearXhr()
         ajaxHook(this)
@@ -86,9 +114,10 @@ export default {
         window.removeEventListener('popstate',this.popstate)
     },
     methods:{
-        init(){
+        async init(){
             //全局绑定事件,用来获取当前对象名称
             window.addEventListener('click',(e)=>{
+                if(e.target?.innerText == "请求信息" || e.target?.innerText == "拦截设置") return
                 this.optionName =  `点击【${e.target?.innerText || "--"}】`    
             },true)
             //主资源加载完毕时
@@ -99,13 +128,19 @@ export default {
             log.pretty(`标准产品辅助工具`, `http://www.shixiaoshi.site/persagy/`, '#ee0067')
             //DOM加载后，初始化界面大小
             this.initPanelSize()
+            //请求接口，比对版本
+            this.persagyVersion = await gmInfo.queryVersion()
+            let updateTip = gmInfo.getUpdateTip()
+            if(this.persagyVersion && this.$version !== this.persagyVersion && !updateTip){
+                this.updateVisble = true
+            } 
         },
         //初始化信息面板大小
         initPanelSize(){
             const menuList = gmInfo.getMenuList()
-            if(menuList && menuList[0].id) {
-            let id = menuList[0].id
-            this.changePanelSize(id)
+            if(menuList.length > 0 && menuList[0].id) {
+                let id = menuList[0].id
+                this.changePanelSize(id)
             }
         },
         //如果页面本身存在ajax-hook对象，清除ajaxhook对象
@@ -129,20 +164,24 @@ export default {
                 ajaxHook(this,iframe.contentWindow)
                 //全局绑定事件,用来获取当前对象名称
                 iframe.contentWindow.addEventListener('click',(e)=>{
+                    if(e.target?.innerText == "请求信息" || e.target?.innerText == "拦截设置") return
                     this.optionName = `点击【${e.target?.innerText || "--"}】`   
                 },true)
             }
+            gmInfo.getUserInfo()
         },
         jump(){
             this.dialogVisible = false
-            window.open(this.iframeSrc)
+            this.$jump(this.iframeSrc)
         },
         popstate(){
+            this.ajaxHookArray = []
             //路由切换时，iframe会发生变化，给新的iframe绑定ajaxhook
             let iframe = document.querySelector('iframe')
             if(iframe){
                 ajaxHook(this,iframe.contentWindow)
                 iframe.contentWindow.addEventListener('click',(e)=>{
+                    if(e.target?.innerText == "请求信息" || e.target?.innerText == "拦截设置") return
                     this.optionName = `点击【${e.target?.innerText || "--"}】`   
                 },true)
             }
@@ -177,6 +216,15 @@ export default {
              }else{
                 this.ajaxDrawer = true
              }
+        },
+        //关闭自动更新提醒
+        closeUpdate(){
+            gmInfo.setUpdateTip(true)
+            this.updateVisble = false
+        },
+        clickVersionMenu(){
+            this.updateVisble = false
+            this.drawer = true  
         }
     },
     watch:{
@@ -206,6 +254,9 @@ export default {
     cursor: pointer;
     border-radius: 50%;
     z-index: 1234567;
+}
+.youhou_info.light{
+    background: rgba(245, 108, 108, .7);
 }
 .youhou_drawer{
     z-index: 123456 !important;

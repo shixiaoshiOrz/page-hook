@@ -9,7 +9,7 @@ async function build() {
     const bannerPath = path.resolve(__dirname, "..", "./bin/banner.txt");
     let banner = fs.readFileSync(bannerPath, "utf8");
 
-    let outputPath = path.resolve(__dirname, "..", "dist/persagytool-v1.2.1.js");
+    let outputPath = path.resolve(__dirname, "..", "dist/persagyTool.js");
     fs.writeFileSync(outputPath, banner + "\n" + text);
 
 

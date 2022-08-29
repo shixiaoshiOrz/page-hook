@@ -25,7 +25,7 @@
                     :auto-format="true" 
                     theme="xq-light" 
                     :readonly="true"
-                    :indent-unit="2"   
+                    :indent-unit="2"  
                     ref="editor">
                 </b-code-editor>
             </div>
@@ -34,7 +34,7 @@
                     v-model="bodyCustom" 
                     :auto-format="true" 
                     theme="idea" 
-                    :indent-unit="2"   
+                    :indent-unit="2"  
                     >
                 </b-code-editor>
             </div>
@@ -158,6 +158,7 @@ export default {
         gmInfo.setHookList(hookInfoList)
         this.$message.success(`保存成功！`)
         this.$emit('close')
+        window.location.reload()
     },
     // 检测json格式
     isJSON(str) {
@@ -208,6 +209,26 @@ export default {
         },
         deep:true,
         immediate:true
+    },
+    bodyCustom:{
+        handler(v){
+            if( v !== this.body){
+                this.bodyHook = true
+            }else{
+                this.bodyHook = false
+            }
+        },
+        deep:true
+    },
+    responseCustom:{
+        handler(v){
+            if( v !== this.response){
+                this.responseHook = true
+            }else{
+                this.responseHook = false
+            }
+        },
+        deep:true
     }
  },
  computed:{

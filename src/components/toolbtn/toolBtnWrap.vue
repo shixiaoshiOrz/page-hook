@@ -18,7 +18,7 @@
         <el-switch v-model="showPassword" active-color="#13ce66" inactive-color="#F56C6C" @change="showPasswordValueChange()"></el-switch>
     </div>
     <div class="tool" v-show="version !== '4.3+'">
-        <span class="youhou_login" title="点击查询可用登录名" @click="queryInfo()">{{ version ==="3.0+" ? "账号获取" : "免密登"}}</span>
+        <span class="youhou_login" title="点击查询可用登录名" @click="queryInfo()">{{ version ==="3.0+" ? "账号获取" : "免密登录"}}</span>
         <el-switch 
             v-model="noPasswordValue" 
             active-color="#13ce66" 
